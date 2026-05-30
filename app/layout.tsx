@@ -39,7 +39,7 @@ export default function RootLayout({
       )}
       suppressHydrationWarning
     >
-      <body className="min-h-full flex flex-col bg-zinc-950 text-zinc-50 font-sans selection:bg-emerald-500/30">
+      <body className="min-h-full flex flex-col bg-graphite-canvas text-zinc-100 font-sans selection:bg-orange-500/20">
         <SolanaProviders>{children}</SolanaProviders>
       </body>
     </html>

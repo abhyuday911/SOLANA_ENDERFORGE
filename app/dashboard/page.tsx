@@ -68,180 +68,182 @@ export default function DashboardPage() {
 
   if (!connected) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[80vh] px-4 space-y-8 text-center">
-        <div className="relative group">
-          <div className="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-cyan-500 rounded-full blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
-          <div className="relative bg-zinc-950 rounded-full p-4 border border-zinc-800">
-            <Sparkles className="size-12 text-emerald-400" />
+      <div className="min-h-screen bg-graphite-canvas text-zinc-100 flex flex-col justify-center items-center px-6 py-24 select-none">
+        <div className="relative">
+          <div className="relative bg-graphite-plate border-milled-bevel shadow-milled-elevated rounded-3xl p-5">
+            <Gavel className="size-10 text-orange-500" />
           </div>
         </div>
 
-        <div className="max-w-2xl space-y-4">
-          <h1 className="text-4xl font-extrabold tracking-tight sm:text-6xl text-zinc-100">
-            Solana Yield <span className="text-emerald-400">Optimizer</span>
+        <div className="max-w-2xl space-y-4 mt-8 text-center">
+          <span className="inline-flex items-center gap-1 text-[9px] font-mono font-bold tracking-[0.15em] text-zinc-500 border border-zinc-950 bg-graphite-sunk shadow-milled-sunk px-3 py-1.5 rounded-full uppercase">
+            OPERATIONAL CREDENTIAL REQUIRED
+          </span>
+          <h1 className="text-4xl font-black tracking-tight sm:text-5xl text-zinc-100 uppercase">
+            INITIALIZE.<span className="text-orange-500">OPERATIONS_SHELL</span>
           </h1>
-          <p className="text-lg text-zinc-400 leading-relaxed">
-            Connect your wallet to analyze concentration risks, discover idle capital, and get AI-synthesized yield strategies tailored to your portfolio.
+          <p className="text-zinc-400 text-sm max-w-xl mx-auto leading-relaxed font-sans font-light">
+            Connect an authorized Solana keypair to calibrate yield metrics, isolate concentration exposure vectors, and synthesize AI risk directives.
           </p>
         </div>
 
-        <WalletMultiButton className="!bg-emerald-500 hover:!bg-emerald-600 !rounded-2xl !transition-all !h-12 !px-8 !font-bold" />
+        <WalletMultiButton className="!bg-zinc-100 hover:!bg-zinc-200 !text-zinc-950 !rounded-xl !transition-all !h-11 !px-6 !font-bold !text-xs !tracking-wider !shadow-md mt-8" />
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-8 w-full">
-      {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-8">
-        <div className="space-y-1">
-          <h2 className="text-2xl font-bold text-zinc-100 flex items-center gap-4">
-            <div className="flex items-center gap-3">
-              <Link
-                href="/"
-                aria-label="Go to home"
-                className="bg-gradient-to-tr from-orange-500 to-amber-500 p-1.5 rounded-sm shadow-lg shadow-orange-500/10 inline-flex rounded-sm"
-              >
-                <Gavel className="size-5 text-zinc-950 fill-zinc-950" />
-              </Link>
-              Dashboard
-            </div>
-            <div className="bg-zinc-900/80 border border-zinc-800 p-0.5 rounded-xl flex items-center gap-0.5 ml-2">
-              <button
-                onClick={() => {
-                  if (cluster !== "mainnet-beta") {
-                    setCluster("mainnet-beta");
-                    performAnalysis("mainnet-beta");
-                  }
-                }}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all",
-                  cluster === "mainnet-beta"
-                    ? "bg-emerald-500 text-zinc-950 shadow-[0_0_12px_rgba(16,185,129,0.3)]"
-                    : "text-zinc-500 hover:text-zinc-300"
-                )}
-              >
-                Mainnet
-              </button>
-              <button
-                onClick={() => {
-                  if (cluster !== "devnet") {
-                    setCluster("devnet");
-                    performAnalysis("devnet");
-                  }
-                }}
-                className={cn(
-                  "px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all",
-                  cluster === "devnet"
-                    ? "bg-amber-500 text-zinc-950 shadow-[0_0_12px_rgba(245,158,11,0.3)]"
-                    : "text-zinc-500 hover:text-zinc-300"
-                )}
-              >
-                Devnet
-              </button>
-            </div>
+    <div className="min-h-screen bg-graphite-canvas text-zinc-100 selection:bg-orange-500/20 font-sans select-none">
+      <div className="max-w-7xl mx-auto px-6 py-10 space-y-8 w-full">
+        {/* Header HUD */}
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-950 pb-8">
+          <div className="space-y-1.5">
+            <h2 className="text-lg font-extrabold text-zinc-100 tracking-wider flex items-center gap-3">
+              <div className="flex items-center gap-3">
+                <Link
+                  href="/"
+                  aria-label="Go to home"
+                  className="bg-gradient-to-tr from-orange-500 to-amber-500 p-1.5 rounded-lg shadow-sm inline-flex"
+                >
+                  <Gavel className="size-4 text-zinc-950 fill-zinc-950" />
+                </Link>
+                <span className="uppercase text-sm tracking-[0.25em] font-black">ENDERFORGE</span>
+              </div>
+              <div className="bg-graphite-sunk border border-zinc-950 shadow-milled-sunk p-0.5 rounded-xl flex items-center gap-0.5 ml-3">
+                <button
+                  onClick={() => {
+                    if (cluster !== "mainnet-beta") {
+                      setCluster("mainnet-beta");
+                      performAnalysis("mainnet-beta");
+                    }
+                  }}
+                  className={cn(
+                    "px-2.5 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer",
+                    cluster === "mainnet-beta"
+                      ? "bg-orange-500 text-zinc-950 font-bold"
+                      : "text-zinc-500 hover:text-zinc-300"
+                  )}
+                >
+                  Mainnet
+                </button>
+                <button
+                  onClick={() => {
+                    if (cluster !== "devnet") {
+                      setCluster("devnet");
+                      performAnalysis("devnet");
+                    }
+                  }}
+                  className={cn(
+                    "px-2.5 py-0.5 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all cursor-pointer",
+                    cluster === "devnet"
+                      ? "bg-amber-500 text-zinc-950 font-bold"
+                      : "text-zinc-500 hover:text-zinc-300"
+                  )}
+                >
+                  Devnet
+                </button>
+              </div>
+            </h2>
+            <p className="text-[9px] text-zinc-500 font-mono uppercase tracking-wider">
+              OPERATOR: {publicKey?.toBase58().slice(0, 8)}...{publicKey?.toBase58().slice(-8)}
+            </p>
+          </div>
 
-          </h2>
-          <p className="text-xs text-zinc-500 font-mono">
-            Wallet: {publicKey?.toBase58().slice(0, 4)}...{publicKey?.toBase58().slice(-4)}
-          </p>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="rounded-xl border-zinc-800 bg-graphite-plate hover:bg-zinc-900 text-zinc-400 hover:text-zinc-100 text-[10px] font-bold tracking-[0.1em] border-milled-bevel shadow-milled-elevated h-8 px-3.5"
+              disabled={isPending}
+              onClick={() => performAnalysis()}
+            >
+              <RefreshCw className={cn("size-3 mr-2", isPending && "animate-spin")} />
+              {isPending ? "SYNCING..." : "REFRESH STATS"}
+            </Button>
+            <WalletMultiButton className="!bg-graphite-plate hover:!bg-zinc-900 !border !border-zinc-800 !rounded-xl !h-8 !px-3.5 !text-[10px] !font-bold !tracking-[0.1em] !text-zinc-300 hover:!text-zinc-100 !transition-all !shadow-sm" />
+          </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            className="rounded-xl border-zinc-800 text-zinc-400 hover:text-zinc-100"
-            disabled={isPending}
-            onClick={() => performAnalysis()}
-          >
-            <RefreshCw className={cn("size-3.5 mr-2", isPending && "animate-spin")} />
-            {isPending ? "Analyzing..." : "Refresh Stats"}
-          </Button>
-          <WalletMultiButton className="!bg-zinc-800 hover:!bg-zinc-700 !rounded-xl !h-8 !px-4 !text-xs" />
-        </div>
-      </div>
+        {error ? (
+          <div className="p-4 rounded-2xl bg-rose-950/20 border border-rose-950/40 text-rose-400 text-xs flex items-center gap-3 font-mono">
+            <ShieldAlert className="size-4 shrink-0" />
+            <p className="uppercase tracking-wider">TELEMETRY SYNC INTERRUPTED: {error}</p>
+            <Button variant="ghost" size="sm" className="ml-auto hover:bg-rose-950/40 h-7 text-[10px] font-bold" onClick={() => performAnalysis()}>
+              RETRY SYNC
+            </Button>
+          </div>
+        ) : null}
 
+        {/* Main Grid */}
+        {data ? (
+          <div className="space-y-8 animate-in fade-in duration-700">
+            {/* Top Row: Summaries */}
+            <PortfolioSummary
+              totalValue={data.riskReport.totalValueUsd}
+              tokenCount={data.holdings.length}
+              hhiScore={data.riskReport.hhiScore}
+              concentrationRiskCount={data.riskReport.concentrationRisks.length}
+            />
 
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+              {/* Left: AI & Yield */}
+              <div className="lg:col-span-2 space-y-8">
+                <AINarrativeCard summary={data.aiSummary} isLoading={isPending} />
+                <YieldMatrix matches={data.yieldMatches} />
+              </div>
 
-      {error ? (
-        <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm flex items-center gap-3">
-          <ShieldAlert className="size-5 shrink-0" />
-          <p>{error}</p>
-          <Button variant="ghost" size="sm" className="ml-auto hover:bg-rose-500/10 h-7" onClick={() => performAnalysis()}>
-            Retry
-          </Button>
-
-        </div>
-      ) : null}
-
-      {/* Main Grid */}
-      {data ? (
-        <div className="space-y-8 animate-in fade-in duration-700">
-          {/* Top Row: Summaries */}
-          <PortfolioSummary
-            totalValue={data.riskReport.totalValueUsd}
-            tokenCount={data.holdings.length}
-            hhiScore={data.riskReport.hhiScore}
-            concentrationRiskCount={data.riskReport.concentrationRisks.length}
-          />
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            {/* Left: AI & Yield */}
-            <div className="lg:col-span-2 space-y-8">
-              <AINarrativeCard summary={data.aiSummary} isLoading={isPending} />
-              <YieldMatrix matches={data.yieldMatches} />
-            </div>
-
-            {/* Right: Risk Analysis */}
-            <div className="space-y-8">
-              <RiskGauge hhiScore={data.riskReport.hhiScore} />
-              <div className="p-4 rounded-2xl bg-zinc-900/50 border border-zinc-800 space-y-4">
-                <h3 className="text-xs font-bold text-zinc-500 uppercase tracking-widest flex items-center gap-2">
-                  <ShieldAlert className="size-3 text-amber-500" />
-                  Risk Breakdown
-                </h3>
-                {data.riskReport.concentrationRisks.length > 0 ? (
-                  data.riskReport.concentrationRisks.map((risk) => (
-                    <div key={risk.symbol} className="flex justify-between items-center text-sm">
-                      <span className="text-zinc-400">{risk.symbol} Exposure</span>
-                      <span className={cn(
-                        "font-bold",
-                        risk.severity === "high" ? "text-rose-400" : "text-amber-400"
-                      )}>
-                        {risk.allocationPct.toFixed(1)}%
-                      </span>
+              {/* Right: Risk Analysis */}
+              <div className="space-y-8">
+                <RiskGauge hhiScore={data.riskReport.hhiScore} />
+                <div className="p-5 rounded-3xl bg-graphite-plate border-milled-bevel shadow-milled-elevated space-y-4">
+                  <h3 className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.15em] flex items-center gap-2 font-mono">
+                    <ShieldAlert className="size-3.5 text-orange-500" />
+                    RISK BREAKDOWN MATRIX
+                  </h3>
+                  {data.riskReport.concentrationRisks.length > 0 ? (
+                    <div className="space-y-3">
+                      {data.riskReport.concentrationRisks.map((risk) => (
+                        <div key={risk.symbol} className="flex justify-between items-center text-xs font-mono border-b border-zinc-950/40 pb-2 last:border-0 last:pb-0">
+                          <span className="text-zinc-400">{risk.symbol} EXPOSURE</span>
+                          <span className={cn(
+                            "font-bold",
+                            risk.severity === "high" ? "text-rose-500" : "text-amber-500"
+                          )}>
+                            {risk.allocationPct.toFixed(1)}%
+                          </span>
+                        </div>
+                      ))}
                     </div>
-                  ))
-                ) : (
-                  <p className="text-sm text-emerald-400/70 border border-emerald-500/20 bg-emerald-500/5 p-3 rounded-xl italic">
-                    All assets within safe 25% allocation thresholds.
-                  </p>
-                )}
+                  ) : (
+                    <p className="text-[10px] text-zinc-400 bg-graphite-sunk shadow-milled-sunk border border-zinc-950 p-3.5 rounded-xl font-mono leading-relaxed">
+                      OPTIMAL. ALL ASSETS WITHIN SAFE 25% ALLOCATION THRESHOLDS.
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
 
-          {/* Bottom Table */}
-          <div className="space-y-4">
-            <h3 className="text-sm font-semibold text-zinc-400 flex items-center gap-2">
-              <Wallet className="h-4 w-4" />
-              Token Holdings
-            </h3>
-            <TokenHoldingsTable holdings={data.holdings} />
+            {/* Bottom Table */}
+            <div className="space-y-3">
+              <h3 className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.2em] flex items-center gap-2 font-mono">
+                <Wallet className="size-3.5 text-zinc-500" />
+                ASSET TELEMETRY REGISTER
+              </h3>
+              <TokenHoldingsTable holdings={data.holdings} />
+            </div>
           </div>
-        </div>
-      ) : isPending ? (
-        <div className="space-y-8">
-          <div className="grid gap-4 md:grid-cols-4">
-            {[1, 2, 3, 4].map(i => <div key={i} className="h-24 rounded-2xl bg-zinc-900 animate-pulse" />)}
+        ) : isPending ? (
+          <div className="space-y-8">
+            <div className="grid gap-4 md:grid-cols-4">
+              {[1, 2, 3, 4].map(i => <div key={i} className="h-24 rounded-3xl bg-graphite-plate border-milled-bevel shadow-milled-elevated animate-pulse" />)}
+            </div>
+            <div className="grid grid-cols-3 gap-8">
+              <div className="col-span-2 h-96 rounded-3xl bg-graphite-plate border-milled-bevel shadow-milled-elevated animate-pulse" />
+              <div className="h-96 rounded-3xl bg-graphite-plate border-milled-bevel shadow-milled-elevated animate-pulse" />
+            </div>
           </div>
-          <div className="grid grid-cols-3 gap-8">
-            <div className="col-span-2 h-96 rounded-2xl bg-zinc-900 animate-pulse" />
-            <div className="h-96 rounded-2xl bg-zinc-900 animate-pulse" />
-          </div>
-        </div>
-      ) : null}
+        ) : null}
+      </div>
     </div>
   );
 }

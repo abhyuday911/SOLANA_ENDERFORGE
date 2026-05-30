@@ -27,10 +27,10 @@ export function RiskGauge({ hhiScore }: RiskGaugeProps) {
     : "text-rose-500";
 
   const stateBg = isHealthy 
-    ? "bg-orange-500 shadow-[0_0_12px_rgba(249,115,22,0.3)]" 
+    ? "bg-orange-500 shadow-[0_1px_2px_rgba(0,0,0,0.4)]" 
     : isWarning 
-    ? "bg-amber-500 shadow-[0_0_12px_rgba(245,158,11,0.3)]" 
-    : "bg-rose-500 shadow-[0_0_12px_rgba(244,63,94,0.3)]";
+    ? "bg-amber-500 shadow-[0_1px_2px_rgba(0,0,0,0.4)]" 
+    : "bg-rose-500 shadow-[0_1px_2px_rgba(0,0,0,0.4)]";
 
   const stateLabel = isHealthy 
     ? "CALIBRATION_OPTIMAL" 
@@ -45,27 +45,27 @@ export function RiskGauge({ hhiScore }: RiskGaugeProps) {
     : <ShieldAlert className="size-3.5 text-rose-500" />;
 
   return (
-    <div className="p-6 rounded-3xl bg-zinc-900/20 border border-zinc-900/60 backdrop-blur-xs flex flex-col justify-between h-full space-y-6">
+    <div className="p-5 rounded-3xl bg-graphite-plate border-milled-bevel shadow-milled-elevated flex flex-col justify-between h-full space-y-5">
       
       {/* Title Header */}
       <div className="flex justify-between items-start">
-        <div className="space-y-1">
-          <h3 className="text-[10px] font-bold text-zinc-400 uppercase tracking-widest font-mono">
-            Concentration Index
+        <div className="space-y-0.5">
+          <h3 className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.15em] font-mono">
+            CONCENTRATION INDEX
           </h3>
-          <p className="text-[11px] text-zinc-500 font-mono uppercase">
-            Herfindahl-Hirschman index exposure
+          <p className="text-[10px] text-zinc-400 font-mono uppercase">
+            HHI Exposure Telemetry
           </p>
         </div>
         <div className="text-right font-mono">
           <span className="text-3xl font-black text-zinc-100 tracking-tighter">{hhiScore}</span>
-          <span className="text-zinc-600 text-xs ml-0.5">/100</span>
+          <span className="text-zinc-500 text-xs ml-0.5 font-mono">/100</span>
         </div>
       </div>
 
       {/* 10-Tick Precision Caliper Slider */}
-      <div className="space-y-3">
-        <div className="bg-zinc-950/60 border border-zinc-900/60 rounded-xl p-4 flex items-center justify-between gap-1.5 h-16 relative">
+      <div className="space-y-2">
+        <div className="bg-graphite-sunk shadow-milled-sunk border border-zinc-950/80 rounded-xl p-3.5 flex items-center justify-between gap-1.5 h-14 relative">
           {Array.from({ length: 10 }).map((_, index) => {
             const isActive = index < activeTicksCount;
             return (
@@ -73,7 +73,7 @@ export function RiskGauge({ hhiScore }: RiskGaugeProps) {
                 key={index}
                 className={cn(
                   "w-[3px] rounded-xs transition-all duration-500",
-                  isActive ? cn("h-8 sm:h-10", stateBg) : "h-5 sm:h-6 bg-zinc-900"
+                  isActive ? cn("h-8 sm:h-9", stateBg) : "h-4 sm:h-5 bg-zinc-900"
                 )}
               />
             );
@@ -81,7 +81,7 @@ export function RiskGauge({ hhiScore }: RiskGaugeProps) {
         </div>
         
         {/* Caliper Telemetry Labels */}
-        <div className="flex justify-between text-[8px] text-zinc-600 font-mono tracking-wider px-1">
+        <div className="flex justify-between text-[8px] text-zinc-500 font-mono tracking-widest px-1 uppercase">
           <span>0.00 (HAZARD)</span>
           <span>0.50 (MIDPORT)</span>
           <span>1.00 (DIVERSIFIED)</span>
@@ -89,15 +89,15 @@ export function RiskGauge({ hhiScore }: RiskGaugeProps) {
       </div>
 
       {/* State Diagnostics & Actions */}
-      <div className="border-t border-zinc-900/60 pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+      <div className="border-t border-zinc-950/40 pt-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
         <div className="flex items-center gap-2">
           {stateIcon}
-          <span className={cn("text-[10px] font-bold font-mono tracking-wider uppercase", stateColor)}>
+          <span className={cn("text-[9px] font-bold font-mono tracking-wider uppercase", stateColor)}>
             {stateLabel}
           </span>
         </div>
         
-        <p className="text-[10px] text-zinc-400 leading-normal font-sans font-light max-w-xs text-left">
+        <p className="text-[10px] text-zinc-400 leading-relaxed font-sans font-light max-w-xs text-left">
           {isHealthy 
             ? "Capital spread indicates balanced single-point safety threshold. Exposure risks isolated." 
             : isWarning 

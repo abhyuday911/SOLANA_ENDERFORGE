@@ -110,37 +110,72 @@
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
+  --background: oklch(0.10 0.005 154);
   --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
+  --card: oklch(0.15 0.015 154);
   --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
+  --popover: oklch(0.12 0.01 154);
   --popover-foreground: oklch(0.985 0 0);
   --primary: oklch(0.922 0 0);
   --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
+  --secondary: oklch(0.12 0.01 154);
   --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
+  --muted: oklch(0.08 0.005 154);
+  --muted-foreground: oklch(0.60 0.01 154);
+  --accent: oklch(0.19 0.02 154);
   --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
+  --border: oklch(0.09 0.005 154);
+  --input: oklch(0.08 0.005 154);
   --ring: oklch(0.556 0 0);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
+  --sidebar: oklch(0.12 0.01 154);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
   --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
+  --sidebar-accent: oklch(0.19 0.02 154);
   --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
+  --sidebar-border: oklch(0.09 0.005 154);
   --sidebar-ring: oklch(0.556 0 0);
+}
+
+@utility bg-graphite-canvas {
+  background-color: oklch(0.10 0.005 154) !important;
+}
+
+@utility bg-graphite-panel {
+  background-color: oklch(0.12 0.01 154) !important;
+}
+
+@utility bg-graphite-plate {
+  background: linear-gradient(180deg, oklch(0.15 0.015 154) 0%, oklch(0.12 0.01 154) 100%) !important;
+}
+
+@utility bg-graphite-sunk {
+  background: linear-gradient(180deg, oklch(0.08 0.005 154) 0%, oklch(0.10 0.01 154) 100%) !important;
+}
+
+@utility shadow-milled-elevated {
+  box-shadow: 
+    0 1px 0 0 oklch(1 0 0 / 4%) inset, 
+    0 1px 1px 0 oklch(0 0 0 / 80%),
+    0 8px 24px -8px oklch(0 0 0 / 90%) !important;
+}
+
+@utility shadow-milled-sunk {
+  box-shadow: 
+    inset 0 1px 3px 0 oklch(0 0 0 / 80%),
+    0 1px 0 0 oklch(1 0 0 / 4%) !important;
+}
+
+@utility border-milled-bevel {
+  border: 1px solid oklch(0.09 0.005 154) !important;
+  border-top-color: oklch(0.22 0.015 154) !important;
+  border-bottom-color: oklch(0.08 0.005 154) !important;
 }
 
 @layer base {
