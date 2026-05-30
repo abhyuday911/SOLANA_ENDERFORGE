@@ -194,30 +194,31 @@ export default function DashboardPage() {
 
               {/* Right: Risk Analysis */}
               <div className="space-y-8">
-                <RiskGauge hhiScore={data.riskReport.hhiScore} />
+                <RiskGauge hhiScore={data.riskReport.hhiScore} tokenCount={data.holdings.length} />
                 <div className="p-5 rounded-3xl bg-graphite-plate border-milled-bevel shadow-milled-elevated space-y-4">
                   <h3 className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.15em] flex items-center gap-2 font-mono">
                     <ShieldAlert className="size-3.5 text-orange-500" />
                     RISK BREAKDOWN MATRIX
                   </h3>
-                  {data.riskReport.concentrationRisks.length > 0 ? (
-                    <div className="space-y-3">
-                      {data.riskReport.concentrationRisks.map((risk) => (
-                        <div key={risk.symbol} className="flex justify-between items-center text-xs font-mono border-b border-zinc-950/40 pb-2 last:border-0 last:pb-0">
-                          <span className="text-zinc-400">{risk.symbol} EXPOSURE</span>
-                          <span className={cn(
-                            "font-bold",
-                            risk.severity === "high" ? "text-rose-500" : "text-amber-500"
-                          )}>
-                            {risk.allocationPct.toFixed(1)}%
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
+                  {data.holdings.length === 0 ? (
                     <p className="text-[10px] text-zinc-400 bg-graphite-sunk shadow-milled-sunk border border-zinc-950 p-3.5 rounded-xl font-mono leading-relaxed">
-                      OPTIMAL. ALL ASSETS WITHIN SAFE 25% ALLOCATION THRESHOLDS.
+                      No assets detected – risk analysis unavailable.
                     </p>
+                  ) : (
+                    data.riskReport.concentrationRisks.length > 0 ? (
+                      <div className="space-y-3">
+                        {data.riskReport.concentrationRisks.map((risk) => (
+                          <div key={risk.symbol} className="flex justify-between items-center text-xs font-mono border-b border-zinc-950/40 pb-2 last:border-0 last:pb-0">
+                            <span className="text-zinc-400">{risk.symbol} EXPOSURE</span>
+                            <span className={cn("font-bold", risk.severity === "high" ? "text-rose-500" : "text-amber-500")}>{risk.allocationPct.toFixed(1)}%</span>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-[10px] text-zinc-400 bg-graphite-sunk shadow-milled-sunk border border-zinc-950 p-3.5 rounded-xl font-mono leading-relaxed">
+                        OPTIMAL. ALL ASSETS WITHIN SAFE 25% ALLOCATION THRESHOLDS.
+                      </p>
+                    )
                   )}
                 </div>
               </div>

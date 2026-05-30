@@ -1,44 +1,56 @@
 "use client";
 
 import { cn } from "@/lib/utils";
-import { AlertCircle, CheckCircle, ShieldAlert } from "lucide-react";
+import { AlertCircle, CheckCircle, ShieldAlert, Info } from "lucide-react";
 
 interface RiskGaugeProps {
   hhiScore: number;
+  tokenCount: number;
 }
 
-export function RiskGauge({ hhiScore }: RiskGaugeProps) {
+export function RiskGauge({ hhiScore, tokenCount }: RiskGaugeProps) {
   // HHI score classification:
   // > 70 is Optimal (well diversified)
   // 41-70 is Moderate concentration (Warning)
   // <= 40 is Severe concentration (Critical Hazard)
-  const isHealthy = hhiScore > 70;
-  const isWarning = hhiScore <= 70 && hhiScore > 40;
-  const isCritical = hhiScore <= 40;
+  const isEmpty = tokenCount === 0;
+  const isHealthy = !isEmpty && hhiScore > 70;
+  const isWarning = !isEmpty && hhiScore <= 70 && hhiScore > 40;
+  const isCritical = !isEmpty && hhiScore <= 40;
 
   // Calculate how many of the 10 ticks should light up
-  const activeTicksCount = Math.min(10, Math.max(0, Math.floor(hhiScore / 10)));
+  const activeTicksCount = isEmpty 
+    ? 0 
+    : Math.min(10, Math.max(0, Math.floor(hhiScore / 10)));
 
   // Calibrate state visual variables
-  const stateColor = isHealthy 
+  const stateColor = isEmpty
+    ? "text-zinc-500"
+    : isHealthy 
     ? "text-orange-500" 
     : isWarning 
     ? "text-amber-500" 
     : "text-rose-500";
 
-  const stateBg = isHealthy 
+  const stateBg = isEmpty
+    ? "bg-zinc-800"
+    : isHealthy 
     ? "bg-orange-500 shadow-[0_1px_2px_rgba(0,0,0,0.4)]" 
     : isWarning 
     ? "bg-amber-500 shadow-[0_1px_2px_rgba(0,0,0,0.4)]" 
     : "bg-rose-500 shadow-[0_1px_2px_rgba(0,0,0,0.4)]";
 
-  const stateLabel = isHealthy 
+  const stateLabel = isEmpty
+    ? "AWAITING_TELEMETRY"
+    : isHealthy 
     ? "CALIBRATION_OPTIMAL" 
     : isWarning 
     ? "WARNING_CONCENTRATED" 
     : "CRITICAL_EXPOSURE_HAZARD";
 
-  const stateIcon = isHealthy 
+  const stateIcon = isEmpty
+    ? <Info className="size-3.5 text-zinc-500" />
+    : isHealthy 
     ? <CheckCircle className="size-3.5 text-orange-500" />
     : isWarning 
     ? <AlertCircle className="size-3.5 text-amber-500" />
@@ -53,12 +65,20 @@ export function RiskGauge({ hhiScore }: RiskGaugeProps) {
           <h3 className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.15em] font-mono">
             CONCENTRATION INDEX
           </h3>
-          <p className="text-[10px] text-zinc-400 font-mono uppercase">
-            HHI Exposure Telemetry
-          </p>
+{tokenCount > 0 ? (
+  <p className="text-[10px] text-zinc-400 font-mono uppercase">
+    HHI Exposure Telemetry
+  </p>
+) : (
+  <p className="text-[10px] text-zinc-400 font-mono uppercase">
+    NO ASSETS – INDEX N/A
+  </p>
+)}
         </div>
         <div className="text-right font-mono">
-          <span className="text-3xl font-black text-zinc-100 tracking-tighter">{hhiScore}</span>
+          <span className="text-3xl font-black text-zinc-100 tracking-tighter">
+            {tokenCount > 0 ? hhiScore : "—"}
+          </span>
           <span className="text-zinc-500 text-xs ml-0.5 font-mono">/100</span>
         </div>
       </div>
@@ -98,7 +118,9 @@ export function RiskGauge({ hhiScore }: RiskGaugeProps) {
         </div>
         
         <p className="text-[10px] text-zinc-400 leading-relaxed font-sans font-light max-w-xs text-left">
-          {isHealthy 
+          {isEmpty
+            ? "Connect a wallet with assets or populate holdings to initiate automated HHI index assessment and safety calibrations."
+            : isHealthy 
             ? "Capital spread indicates balanced single-point safety threshold. Exposure risks isolated." 
             : isWarning 
             ? "Asset concentration warning. Restructuring capital into alternative yield channels advised." 

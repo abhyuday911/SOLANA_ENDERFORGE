@@ -250,7 +250,17 @@ async function synthesizeWithAI(
   yieldMatches: YieldMatch[],
   groq: Groq
 ): Promise<string> {
-  const top20 = holdings.slice(0, 20);
+  if (holdings.length === 0) {
+    return `Your wallet appears to be empty – no assets were detected.
+
+There are no concentration risks or yield opportunities to analyze at this time.
+
+To get a meaningful analysis, please deposit some SOL or SPL tokens into your wallet and refresh the dashboard.`;
+  }
+
+  const top20 = [...holdings]
+    .sort((a, b) => b.valueUsd - a.valueUsd)
+    .slice(0, 20);
 
   const portfolioSummary = top20
     .map(

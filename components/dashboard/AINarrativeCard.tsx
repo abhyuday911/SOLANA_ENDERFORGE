@@ -11,7 +11,7 @@ interface AINarrativeCardProps {
 
 export function AINarrativeCard({ summary, isLoading }: AINarrativeCardProps) {
   return (
-    <div className="p-5 rounded-3xl bg-graphite-plate border-milled-bevel shadow-milled-elevated flex flex-col space-y-3 font-mono relative overflow-hidden group">
+    <div className="p-5 rounded-3xl bg-graphite-plate border-milled-bevel shadow-milled-elevated flex flex-col space-y-3 font-mono relative overflow-hidden group select-text">
       
       {/* Subtle CAD Background Grid Element */}
       <div className="absolute top-0 right-0 p-4 opacity-3 pointer-events-none">
@@ -111,7 +111,7 @@ export function AINarrativeCard({ summary, isLoading }: AINarrativeCardProps) {
       </div>
 
       {/* Telemetry Status Line */}
-      <div className="flex justify-between items-center text-[8px] text-zinc-600 uppercase tracking-widest font-mono select-none">
+      <div className="flex justify-between items-center text-[8px] text-zinc-600 uppercase tracking-widest font-mono select-text">
         <span>AI_ENGINE: LLAMA-3-SOLANA-OPERATOR</span>
         <span>LATENCY: ZERO_CACHE</span>
       </div>

@@ -50,16 +50,19 @@ export function PortfolioSummary({
             </span>
             <Zap className="size-3.5 text-zinc-500" />
           </div>
-          <div>
-            <div className={cn(
-              "text-xl sm:text-2xl font-black font-mono tracking-tight",
-              isHealthy ? "text-orange-500" : isWarning ? "text-amber-500" : "text-rose-500"
-            )}>
-              {hhiScore}
-              <span className="text-zinc-500 text-xs font-normal ml-0.5 font-mono">/100</span>
-            </div>
+          <div className="">
+            {tokenCount > 0 ? (
+              <div className={cn(
+                "text-xl sm:text-2xl font-black font-mono tracking-tight",
+                isHealthy ? "text-orange-500" : isWarning ? "text-amber-500" : "text-rose-500"
+              )}>
+                {hhiScore}<span className="text-zinc-500 text-xs font-normal ml-0.5 font-mono">/100</span>
+              </div>
+            ) : (
+              <div className="text-xl sm:text-2xl font-black font-mono text-zinc-400 tracking-tight">—</div>
+            )}
             <p className="text-[9px] font-mono text-zinc-500 uppercase mt-0.5">
-              HHI CALIBRATION INDEX
+              {tokenCount > 0 ? "HHI CALIBRATION INDEX" : "NO ASSETS – INDEX N/A"}
             </p>
           </div>
         </div>
