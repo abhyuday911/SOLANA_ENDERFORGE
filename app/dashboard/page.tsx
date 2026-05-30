@@ -32,14 +32,14 @@ export default function DashboardPage() {
   // Track current request to prevent race conditions
   const analysisRequestId = useRef(0);
 
-  const performAnalysis = async (targetCluster = cluster) => {
-    if (!publicKey) return;
+  const performAnalysis = async (targetCluster = cluster, targetWallet = publicKey) => {
+    if (!targetWallet) return;
 
     const requestId = ++analysisRequestId.current;
 
     setError(null);
     startTransition(async () => {
-      const response = await analyzePortfolio(publicKey.toBase58(), targetCluster);
+      const response = await analyzePortfolio(targetWallet.toBase58(), targetCluster);
 
       // Only update if this is still the latest request
       if (requestId === analysisRequestId.current) {
@@ -59,10 +59,15 @@ export default function DashboardPage() {
     performAnalysis(nextCluster);
   };
 
-  // Auto-analyze on connect
+  // Auto-analyze / react to wallet change or disconnect
   useEffect(() => {
-    if (connected && publicKey && !data) {
-      performAnalysis();
+    if (connected && publicKey) {
+      setData(null);
+      setError(null);
+      performAnalysis(cluster, publicKey);
+    } else {
+      setData(null);
+      setError(null);
     }
   }, [connected, publicKey]);
 
