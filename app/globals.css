@@ -50,12 +50,27 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
-  /* Custom Rhea colors */
-  --color-emerald-400: oklch(0.924 0.12 174.035);
-  --color-emerald-500: oklch(0.869 0.135 174.035);
-  --color-zinc-950: oklch(0.145 0 0);
-  --color-zinc-900: oklch(0.205 0 0);
-  --color-zinc-800: oklch(0.269 0 0);
+  /* Custom Rhea colors - Imperial Jade & Gold Theme */
+  --color-emerald-50: oklch(0.97 0.02 154);
+  --color-emerald-100: oklch(0.94 0.04 154);
+  --color-emerald-200: oklch(0.89 0.07 154);
+  --color-emerald-300: oklch(0.81 0.11 154);
+  --color-emerald-400: oklch(0.74 0.16 154); /* Glowing emerald */
+  --color-emerald-500: oklch(0.66 0.17 154); /* Rich deep jade */
+  --color-emerald-600: oklch(0.58 0.18 154);
+  --color-emerald-700: oklch(0.50 0.16 154);
+  --color-emerald-800: oklch(0.40 0.14 154);
+  --color-emerald-900: oklch(0.28 0.10 154);
+  --color-emerald-950: oklch(0.12 0.015 154); /* Deep velvet dark green */
+
+  /* Gold accents for premium states */
+  --color-gold-400: oklch(0.86 0.10 85);
+  --color-gold-500: oklch(0.78 0.14 85); /* Liquid gold */
+  --color-gold-600: oklch(0.68 0.13 85);
+
+  --color-zinc-950: oklch(0.11 0.01 154);
+  --color-zinc-900: oklch(0.14 0.015 154);
+  --color-zinc-800: oklch(0.19 0.02 154);
 }
 
 
