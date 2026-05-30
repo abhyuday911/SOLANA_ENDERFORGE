@@ -4,6 +4,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Sparkles } from "lucide-react";
 
+import ReactMarkdown from "react-markdown";
+
 interface AINarrativeCardProps {
   summary?: string;
   isLoading?: boolean;
@@ -32,13 +34,19 @@ export function AINarrativeCard({ summary, isLoading }: AINarrativeCardProps) {
             <Skeleton className="h-32 w-full bg-zinc-800 rounded-xl" />
           </div>
         ) : summary ? (
-          <div 
-            className="prose prose-invert prose-sm max-w-none text-zinc-300 leading-relaxed space-y-4"
-            dangerouslySetInnerHTML={{ 
-              // Basic line break handling if it's not perfect markdown
-              __html: summary.replace(/\n/g, '<br/>') 
-            }}
-          />
+          <div className="prose prose-invert prose-sm max-w-none prose-emerald text-zinc-300 leading-relaxed font-sans">
+            <ReactMarkdown
+              components={{
+                h1: ({ ...props }) => <h1 className="text-emerald-400 font-bold" {...props} />,
+                h2: ({ ...props }) => <h2 className="text-emerald-400 font-bold mt-6 mb-2" {...props} />,
+                h3: ({ ...props }) => <h3 className="text-emerald-400 font-semibold mt-4 mb-2" {...props} />,
+                h4: ({ ...props }) => <h4 className="text-emerald-400 font-semibold" {...props} />,
+              }}
+            >
+              {summary}
+            </ReactMarkdown>
+          </div>
+
         ) : (
           <p className="text-sm text-zinc-500 italic">
             Connect your wallet to generate an AI-powered strategic summary.
@@ -48,3 +56,4 @@ export function AINarrativeCard({ summary, isLoading }: AINarrativeCardProps) {
     </Card>
   );
 }
+
