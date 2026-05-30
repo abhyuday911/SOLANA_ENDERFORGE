@@ -60,7 +60,7 @@ export function HeroSection() {
       });
 
       const tl = gsap.timeline({ defaults: { ease: "power4.out", duration: 1.4 } });
-      
+
       // 2. Entrance Animation: Staggered HUD reveals
       tl.to(badgeRef.current, { opacity: 1, y: 0, delay: 0.3 })
         .to(titleRef.current, { opacity: 1, y: 0 }, "-=1.1")
@@ -139,18 +139,22 @@ export function HeroSection() {
       {/* Header HUD Navigation (Enderforge Machined Nav) */}
       <header className="absolute top-0 left-0 right-0 px-6 py-6 flex items-center justify-between max-w-7xl mx-auto w-full border-b border-zinc-900/30 backdrop-blur-md z-30">
         <div className="flex items-center gap-3 font-extrabold text-base tracking-[0.2em] text-zinc-100">
-          <div className="bg-gradient-to-tr from-orange-500 to-amber-500 p-1.5 rounded-sm shadow-lg shadow-orange-500/10">
+          <Link
+            href="/"
+            aria-label="Go to home"
+            className="bg-gradient-to-tr from-orange-500 to-amber-500 p-1.5 rounded-sm shadow-lg shadow-orange-500/10 inline-flex rounded-sm"
+          >
             <Gavel className="size-5 text-zinc-950 fill-zinc-950" />
-          </div>
+          </Link>
           ENDERFORGE
         </div>
-        
+
         <div className="flex items-center gap-4">
           <span className="hidden sm:inline-flex items-center gap-1.5 text-[9px] font-mono font-bold tracking-[0.15em] text-orange-400 border border-orange-500/20 bg-orange-500/5 px-3 py-1 rounded-full uppercase">
             <span className="size-1.5 rounded-full bg-orange-500" />
             CALIBRATION ENGINE ACTIVE
           </span>
-          
+
           <Link href="/dashboard">
             <Button variant="outline" className="rounded-xl border-zinc-800 bg-zinc-900/40 hover:bg-zinc-800 text-[10px] font-bold tracking-[0.15em] text-zinc-300">
               LAUNCH TERMINAL
@@ -161,13 +165,13 @@ export function HeroSection() {
 
       {/* Central Hero Core Copy */}
       <div className="relative flex-1 flex flex-col items-center justify-center text-center max-w-4xl mx-auto space-y-10 z-10 pt-20">
-        
+
         {/* Subtle Pill Tag */}
         <div ref={badgeRef} className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-zinc-900/60 border border-zinc-800/80 text-[9px] font-bold tracking-[0.15em] text-orange-400 uppercase shadow-2xl backdrop-blur-sm">
           <Activity className="size-3 text-orange-500" />
           SOVEREIGN RISK CALIBRATION
         </div>
-        
+
         {/* Typographic Mask Title */}
         <h1
           ref={titleRef}

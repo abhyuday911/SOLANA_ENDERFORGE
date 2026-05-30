@@ -11,8 +11,9 @@ import { YieldMatrix } from "@/components/dashboard/YieldMatrix";
 import { TokenHoldingsTable } from "@/components/dashboard/TokenHoldingsTable";
 import { AINarrativeCard } from "@/components/dashboard/AINarrativeCard";
 import { Button } from "@/components/ui/button";
-import { RefreshCw, ShieldAlert, Sparkles, Wallet } from "lucide-react";
+import { Gavel, RefreshCw, ShieldAlert, Sparkles, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
+import Link from 'next/link';
 
 // Dynamic import for WalletMultiButton to prevent hydration mismatch
 const WalletMultiButton = dynamic(
@@ -27,7 +28,7 @@ export default function DashboardPage() {
   const [isPending, startTransition] = useTransition();
   const [data, setData] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
-  
+
   // Track current request to prevent race conditions
   const analysisRequestId = useRef(0);
 
@@ -35,7 +36,7 @@ export default function DashboardPage() {
     if (!publicKey) return;
 
     const requestId = ++analysisRequestId.current;
-    
+
     setError(null);
     startTransition(async () => {
       const response = await analyzePortfolio(publicKey.toBase58(), targetCluster);
@@ -95,7 +96,16 @@ export default function DashboardPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-8">
         <div className="space-y-1">
           <h2 className="text-2xl font-bold text-zinc-100 flex items-center gap-4">
-            Optimizer Dashboard
+            <div className="flex items-center gap-3">
+              <Link
+                href="/"
+                aria-label="Go to home"
+                className="bg-gradient-to-tr from-orange-500 to-amber-500 p-1.5 rounded-sm shadow-lg shadow-orange-500/10 inline-flex rounded-sm"
+              >
+                <Gavel className="size-5 text-zinc-950 fill-zinc-950" />
+              </Link>
+              Dashboard
+            </div>
             <div className="bg-zinc-900/80 border border-zinc-800 p-0.5 rounded-xl flex items-center gap-0.5 ml-2">
               <button
                 onClick={() => {
