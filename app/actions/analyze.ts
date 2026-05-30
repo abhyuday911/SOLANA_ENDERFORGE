@@ -8,8 +8,9 @@
  * 3. Fetch real-time prices via Jupiter V3
  * 4. Run risk engines
  * 5. Match yield opportunities
- * 6. AI synthesis via Groq (llama3-70b-8192)
+ * 6. AI synthesis via Groq (llama-3.3-70b-versatile)
  */
+
 
 import { z } from "zod";
 import { Ratelimit } from "@upstash/ratelimit";
@@ -23,25 +24,28 @@ import {
 } from "@/lib/engine";
 import { matchYieldOpportunities, type YieldMatch } from "@/lib/yield";
 
-// ─── Upstash Rate Limiter ────────────────────────────────────────────────────
+// ─── Clients Helper ─────────────────────────────────────────────────────────
 
-const redis = new Redis({
-  url: env.UPSTASH_REDIS_REST_URL,
-  token: env.UPSTASH_REDIS_REST_TOKEN,
-});
+function getClients() {
+  const redis = new Redis({
+    url: env.UPSTASH_REDIS_REST_URL,
+    token: env.UPSTASH_REDIS_REST_TOKEN,
+  });
 
-const ratelimit = new Ratelimit({
-  redis,
-  limiter: Ratelimit.slidingWindow(5, "60 s"), // 5 requests per minute
-  analytics: true,
-  prefix: "solana-yield-optimizer",
-});
+  const ratelimit = new Ratelimit({
+    redis,
+    limiter: Ratelimit.slidingWindow(5, "60 s"),
+    analytics: true,
+    prefix: "solana-yield-optimizer",
+  });
 
-// ─── Groq Client ─────────────────────────────────────────────────────────────
+  const groq = new Groq({ apiKey: env.GROQ_API_KEY });
 
-const groq = new Groq({ apiKey: env.GROQ_API_KEY });
+  return { redis, ratelimit, groq };
+}
 
 // ─── Zod Schemas for API responses ───────────────────────────────────────────
+
 
 const HeliusTokenSchema = z.object({
   interface: z.string().optional(),
@@ -261,7 +265,8 @@ async function enrichWithJupiterPrices(
 async function synthesizeWithAI(
   holdings: TokenHolding[],
   riskReport: RiskReport,
-  yieldMatches: YieldMatch[]
+  yieldMatches: YieldMatch[],
+  groq: Groq
 ): Promise<string> {
   // Truncate to top 20 assets by value
   const top20 = holdings.slice(0, 20);
@@ -320,10 +325,11 @@ Be specific with numbers. Use emerald-themed positive language for yield opportu
         },
         { role: "user", content: prompt },
       ],
-      model: "llama3-70b-8192",
+      model: "llama-3.3-70b-versatile",
       temperature: 0.4,
       max_tokens: 1024,
     });
+
 
     return (
       completion.choices[0]?.message?.content ??
@@ -360,7 +366,10 @@ export async function analyzePortfolio(
     };
   }
 
-  // 2. Rate-limit check
+  // 2. Client Initialization
+  const { ratelimit, groq } = getClients();
+
+  // 3. Rate-limit check
   const { success: rateLimitOk } = await ratelimit.limit(walletAddress);
   if (!rateLimitOk) {
     return {
@@ -386,7 +395,7 @@ export async function analyzePortfolio(
     const yieldMatches = await matchYieldOpportunities(riskReport.idleCapital);
 
     // 7. AI synthesis via Groq
-    const aiSummary = await synthesizeWithAI(holdings, riskReport, yieldMatches);
+    const aiSummary = await synthesizeWithAI(holdings, riskReport, yieldMatches, groq);
 
     return {
       success: true,

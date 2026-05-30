@@ -1,148 +1,126 @@
-/**
- * Financial Math Engine – pure functions for portfolio risk analysis.
- *
- * All functions are side-effect free and work on plain arrays/objects.
- */
+import { z } from "zod";
 
-// ─── Types ───────────────────────────────────────────────────────────────────
+export const tokenHoldingSchema = z.object({
+  mint: z.string().min(1),
+  symbol: z.string().min(1),
+  name: z.string().min(1),
+  balance: z.number().finite().nonnegative(),
+  priceUsd: z.number().finite().nonnegative(),
+  valueUsd: z.number().finite().nonnegative(),
+  allocationPct: z.number().finite().min(0).max(100),
+  logoUri: z.string(),
+  isKnownYieldPosition: z.boolean().default(false),
+});
 
-export interface TokenHolding {
-  /** Token mint address */
-  mint: string;
-  /** Human-readable symbol (e.g. "SOL") */
-  symbol: string;
-  /** Token name */
-  name: string;
-  /** Raw balance (UI amount, already decimals-adjusted) */
-  balance: number;
-  /** USD price per unit */
-  priceUsd: number;
-  /** balance × priceUsd */
-  valueUsd: number;
-  /** Percentage of portfolio (0-100) */
-  allocationPct: number;
-  /** URI for token logo */
-  logoUri: string;
-}
+export type TokenHolding = z.infer<typeof tokenHoldingSchema>;
 
 export interface ConcentrationRisk {
-  /** Token symbol that exceeds 25% threshold */
   symbol: string;
-  /** Actual allocation percentage */
   allocationPct: number;
-  /** Severity: "high" (>50%), "medium" (25-50%) */
-  severity: "high" | "medium";
-}
-
-export interface RiskReport {
-  /** HHI score 1..100 (100 = perfectly balanced) */
-  hhiScore: number;
-  /** Raw HHI value (sum of squared allocations, 0..10000) */
-  hhiRaw: number;
-  /** Tokens exceeding 25% concentration */
-  concentrationRisks: ConcentrationRisk[];
-  /** Tokens >$50 sitting idle (not in known yield positions) */
-  idleCapital: IdleAsset[];
-  /** Total portfolio value in USD */
-  totalValueUsd: number;
+  valueUsd: number;
+  severity: "medium" | "high";
 }
 
 export interface IdleAsset {
-  symbol: string;
-  valueUsd: number;
   mint: string;
+  symbol: string;
+  name: string;
+  valueUsd: number;
+  balance: number;
 }
 
-// ─── Known yield position mints (tokens already in protocols) ────────────────
+export interface RiskReport {
+  totalValueUsd: number;
+  hhiRaw: number;
+  hhiScore: number;
+  concentrationRisks: ConcentrationRisk[];
+  idleCapital: IdleAsset[];
+}
 
-const KNOWN_YIELD_MINTS = new Set([
-  // Kamino kTokens (example mints)
-  "J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn", // JitoSOL
-  "mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So",  // mSOL
-  "bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1",  // bSOL
-  "7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj", // stSOL
-  // MarginFi deposit receipts, Drift LP tokens, etc. – extend as needed
+const KNOWN_YIELD_MINTS = new Set<string>([
+  "J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn",
+  "mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So",
+  "bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1",
+  "7dHbWXmci3dT8UFYWYZweBLXgycu7Y3iL6trKn1Y7ARj",
 ]);
 
-// ─── Concentration Analysis ──────────────────────────────────────────────────
+export function withAllocations(holdings: TokenHolding[]): TokenHolding[] {
+  const totalValueUsd = holdings.reduce((sum, holding) => sum + holding.valueUsd, 0);
 
-/**
- * Flag any asset exceeding 25% of total portfolio value.
- */
+  return holdings
+    .map((holding) => ({
+      ...holding,
+      allocationPct:
+        totalValueUsd > 0
+          ? Number(((holding.valueUsd / totalValueUsd) * 100).toFixed(2))
+          : 0,
+      isKnownYieldPosition:
+        holding.isKnownYieldPosition || KNOWN_YIELD_MINTS.has(holding.mint),
+    }))
+    .sort((a, b) => b.valueUsd - a.valueUsd);
+}
+
 export function analyzeConcentration(
   holdings: TokenHolding[]
 ): ConcentrationRisk[] {
   return holdings
-    .filter((h) => h.allocationPct > 25)
-    .map((h) => ({
-      symbol: h.symbol,
-      allocationPct: h.allocationPct,
-      severity: h.allocationPct > 50 ? ("high" as const) : ("medium" as const),
+    .filter((holding) => holding.allocationPct > 25)
+    .map((holding) => ({
+      symbol: holding.symbol,
+      allocationPct: holding.allocationPct,
+      valueUsd: holding.valueUsd,
+      severity: holding.allocationPct > 50 ? "high" : "medium",
     }));
 }
 
-// ─── HHI (Herfindahl–Hirschman Index) ────────────────────────────────────────
-
-/**
- * Calculate the HHI diversification score.
- *
- * HHI = Σ(allocation%)²
- *   - Perfectly concentrated (1 asset): HHI = 10,000
- *   - Perfectly balanced (100 assets @ 1%): HHI = 100
- *
- * We invert to a 1–100 intuitive score:
- *   score = max(1, 100 - ((hhiRaw - 100) / 99))
- *   → 100 = maximally diverse, 1 = maximally concentrated
- */
 export function calculateHHI(holdings: TokenHolding[]): {
   hhiRaw: number;
   hhiScore: number;
 } {
-  if (holdings.length === 0) return { hhiRaw: 10000, hhiScore: 1 };
+  if (holdings.length === 0) {
+    return { hhiRaw: 0, hhiScore: 100 };
+  }
 
   const hhiRaw = holdings.reduce(
-    (sum, h) => sum + h.allocationPct ** 2,
+    (sum, holding) => sum + holding.allocationPct ** 2,
     0
   );
 
-  // Normalize: 10000 → 1, 100 → 100
-  const score = Math.max(1, Math.round(100 - ((hhiRaw - 100) / 99)));
-  return { hhiRaw: Math.round(hhiRaw), hhiScore: Math.min(100, score) };
+  const minimumHHI = 10_000 / holdings.length;
+  const range = 10_000 - minimumHHI;
+  const normalized =
+    range > 0 ? ((10_000 - hhiRaw) / range) * 99 + 1 : 1;
+
+  return {
+    hhiRaw: Number(hhiRaw.toFixed(0)),
+    hhiScore: Math.max(1, Math.min(100, Math.round(normalized))),
+  };
 }
 
-// ─── Idle Capital Detection ──────────────────────────────────────────────────
-
-/**
- * Identify wallet tokens >$50 in value that are NOT in known yield protocols.
- */
 export function findIdleCapital(holdings: TokenHolding[]): IdleAsset[] {
   return holdings
     .filter(
-      (h) => h.valueUsd > 50 && !KNOWN_YIELD_MINTS.has(h.mint)
+      (holding) => holding.valueUsd > 50 && !holding.isKnownYieldPosition
     )
-    .map((h) => ({
-      symbol: h.symbol,
-      valueUsd: h.valueUsd,
-      mint: h.mint,
+    .map((holding) => ({
+      mint: holding.mint,
+      symbol: holding.symbol,
+      name: holding.name,
+      valueUsd: holding.valueUsd,
+      balance: holding.balance,
     }));
 }
 
-// ─── Full Risk Report ────────────────────────────────────────────────────────
-
-/**
- * Run all risk engines and return a unified report.
- */
-export function generateRiskReport(holdings: TokenHolding[]): RiskReport {
-  const totalValueUsd = holdings.reduce((s, h) => s + h.valueUsd, 0);
+export function generateRiskReport(rawHoldings: TokenHolding[]): RiskReport {
+  const holdings = withAllocations(rawHoldings);
+  const totalValueUsd = holdings.reduce((sum, holding) => sum + holding.valueUsd, 0);
   const { hhiRaw, hhiScore } = calculateHHI(holdings);
-  const concentrationRisks = analyzeConcentration(holdings);
-  const idleCapital = findIdleCapital(holdings);
 
   return {
-    hhiScore,
-    hhiRaw,
-    concentrationRisks,
-    idleCapital,
     totalValueUsd,
+    hhiRaw,
+    hhiScore,
+    concentrationRisks: analyzeConcentration(holdings),
+    idleCapital: findIdleCapital(holdings),
   };
 }
