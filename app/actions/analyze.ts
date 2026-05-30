@@ -11,7 +11,6 @@
  * 6. AI synthesis via Groq (llama-3.3-70b-versatile)
  */
 
-
 import { z } from "zod";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
@@ -45,7 +44,6 @@ function getClients() {
 }
 
 // ─── Zod Schemas for API responses ───────────────────────────────────────────
-
 
 const HeliusTokenSchema = z.object({
   interface: z.string().optional(),
@@ -107,12 +105,10 @@ export type AnalysisResponse =
 // ─── Helius DAS API: Fetch token balances ────────────────────────────────────
 
 async function fetchHeliusBalances(
-  walletAddress: string
+  walletAddress: string,
+  rpcUrl: string
 ): Promise<TokenHolding[]> {
-  const url = env.HELIUS_RPC_URL;
-
-  // Fetch fungible tokens via DAS
-  const response = await fetch(url, {
+  const response = await fetch(rpcUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -155,7 +151,8 @@ async function fetchHeliusBalances(
     const priceUsd = tokenInfo.price_info?.price_per_token ?? 0;
     const valueUsd = tokenInfo.price_info?.total_price ?? uiBalance * priceUsd;
 
-    if (valueUsd < 0.01) continue; // Skip dust
+    // Allow more assets on devnet (less strict dust filter)
+    if (valueUsd < 0.01 && uiBalance < 0.000001) continue;
 
     holdings.push({
       mint: data.id,
@@ -164,7 +161,7 @@ async function fetchHeliusBalances(
       balance: uiBalance,
       priceUsd,
       valueUsd,
-      allocationPct: 0, // Calculated after we have totals
+      allocationPct: 0,
       logoUri: data.content.links?.image ?? "",
     });
   }
@@ -175,7 +172,7 @@ async function fetchHeliusBalances(
     const solPrice = nativeBalance.price_per_sol ?? 0;
     const solValue = nativeBalance.total_price ?? solBalance * solPrice;
 
-    if (solValue > 0.01) {
+    if (solBalance > 0) {
       holdings.push({
         mint: "So11111111111111111111111111111111111111112",
         symbol: "SOL",
@@ -190,7 +187,7 @@ async function fetchHeliusBalances(
     }
   }
 
-  // Calculate allocation percentages
+  // Initial calculation of allocation percentages
   const totalValue = holdings.reduce((s, h) => s + h.valueUsd, 0);
   if (totalValue > 0) {
     for (const h of holdings) {
@@ -198,9 +195,7 @@ async function fetchHeliusBalances(
     }
   }
 
-  // Sort by value descending
   holdings.sort((a, b) => b.valueUsd - a.valueUsd);
-
   return holdings;
 }
 
@@ -209,26 +204,17 @@ async function fetchHeliusBalances(
 async function enrichWithJupiterPrices(
   holdings: TokenHolding[]
 ): Promise<TokenHolding[]> {
-  // Only enrich tokens missing prices
   const needsPricing = holdings.filter((h) => h.priceUsd === 0);
   if (needsPricing.length === 0) return holdings;
 
   const mintIds = needsPricing.map((h) => h.mint).join(",");
 
   try {
-    const res = await fetch(
-      `https://api.jup.ag/price/v3?ids=${mintIds}`,
-      {
-        headers: {
-          "x-api-key": env.JUPITER_API_KEY,
-        },
-      }
-    );
+    const res = await fetch(`https://api.jup.ag/price/v3?ids=${mintIds}`, {
+      headers: { "x-api-key": env.JUPITER_API_KEY },
+    });
 
-    if (!res.ok) {
-      console.warn("[jupiter] Price API error:", res.status);
-      return holdings;
-    }
+    if (!res.ok) return holdings;
 
     const json = await res.json();
     const priceData = json.data;
@@ -237,7 +223,6 @@ async function enrichWithJupiterPrices(
     const parsed = JupiterPriceSchema.safeParse(priceData);
     if (!parsed.success) return holdings;
 
-    // Enrich prices
     for (const h of holdings) {
       const price = parsed.data[h.mint];
       if (price && h.priceUsd === 0) {
@@ -246,7 +231,7 @@ async function enrichWithJupiterPrices(
       }
     }
 
-    // Recalculate allocations
+    // Recalculate allocations after pricing
     const totalValue = holdings.reduce((s, h) => s + h.valueUsd, 0);
     if (totalValue > 0) {
       for (const h of holdings) {
@@ -268,7 +253,6 @@ async function synthesizeWithAI(
   yieldMatches: YieldMatch[],
   groq: Groq
 ): Promise<string> {
-  // Truncate to top 20 assets by value
   const top20 = holdings.slice(0, 20);
 
   const portfolioSummary = top20
@@ -279,11 +263,11 @@ async function synthesizeWithAI(
     .join("\n");
 
   const riskSummary = [
-    `HHI Score: ${riskReport.hhiScore}/100 (${riskReport.hhiScore > 70 ? "well diversified" : riskReport.hhiScore > 40 ? "moderately concentrated" : "highly concentrated"})`,
+    `HHI Score: ${riskReport.hhiScore}/100`,
     riskReport.concentrationRisks.length > 0
       ? `Concentration Risks: ${riskReport.concentrationRisks.map((c) => `${c.symbol} at ${c.allocationPct.toFixed(1)}%`).join(", ")}`
       : "No concentration risks detected.",
-    `Idle Capital: $${riskReport.idleCapital.reduce((s, a) => s + a.valueUsd, 0).toFixed(2)} across ${riskReport.idleCapital.length} assets not in yield positions.`,
+    `Idle Capital: $${riskReport.idleCapital.reduce((s, a) => s + a.valueUsd, 0).toFixed(2)}`,
   ].join("\n");
 
   const yieldSummary =
@@ -291,37 +275,30 @@ async function synthesizeWithAI(
       ? yieldMatches
           .map(
             (ym) =>
-              `${ym.tokenSymbol} ($${ym.idleValueUsd.toFixed(2)} idle): Top pool = ${ym.opportunities[0]?.protocol} @ ${ym.opportunities[0]?.apyTotal.toFixed(2)}% APY`
+              `${ym.tokenSymbol}: Top pool = ${ym.opportunities[0]?.protocol} @ ${ym.opportunities[0]?.apyTotal.toFixed(2)}% APY`
           )
           .join("\n")
       : "No yield opportunities matched.";
 
-  const prompt = `You are a DeFi portfolio strategist for Solana. Analyze this portfolio and provide a concise strategic summary (3-5 paragraphs, markdown formatting).
-
-## Portfolio (Top ${top20.length} assets, total: $${riskReport.totalValueUsd.toFixed(2)})
+  const prompt = `You are a DeFi strategist for Solana. Analyze this portfolio:
+  
+## Portfolio
 ${portfolioSummary}
 
-## Risk Analysis
+## Risk
 ${riskSummary}
 
-## Available Yield Opportunities
+## Yields
 ${yieldSummary}
 
-Provide:
-1. A brief portfolio health assessment
-2. Specific action items to reduce concentration risk
-3. Yield optimization recommendations with estimated annual yield in USD
-4. Any warnings about current positions
-
-Be specific with numbers. Use emerald-themed positive language for yield opportunities. Keep it concise.`;
+Provide a concise 3-5 paragraph strategic assessment in markdown. Use Emerald themes for positive yield steps.`;
 
   try {
     const completion = await groq.chat.completions.create({
       messages: [
         {
           role: "system",
-          content:
-            "You are a professional DeFi strategist specializing in the Solana ecosystem. Provide actionable, data-driven advice. Format responses in markdown.",
+          content: "You are a professional Solana DeFi assistant.",
         },
         { role: "user", content: prompt },
       ],
@@ -330,14 +307,13 @@ Be specific with numbers. Use emerald-themed positive language for yield opportu
       max_tokens: 1024,
     });
 
-
     return (
       completion.choices[0]?.message?.content ??
       "Unable to generate AI summary at this time."
     );
   } catch (err) {
-    console.error("[groq] AI synthesis failed:", err);
-    return "AI analysis temporarily unavailable. Please try again in a moment.";
+    console.error("[groq] AI failed:", err);
+    return "AI synthesis unavailable.";
   }
 }
 
@@ -349,53 +325,65 @@ const WalletInputSchema = z.object({
     .min(32)
     .max(44)
     .regex(/^[1-9A-HJ-NP-Za-km-z]+$/, "Invalid base58 address"),
+  cluster: z.enum(["mainnet-beta", "devnet"]).default("mainnet-beta"),
 });
 
 export async function analyzePortfolio(
-  walletAddress: string
+  walletAddress: string,
+  cluster: "mainnet-beta" | "devnet" = "mainnet-beta"
 ): Promise<AnalysisResponse> {
-  // 1. Validate input
-  const input = WalletInputSchema.safeParse({ walletAddress });
+  const input = WalletInputSchema.safeParse({ walletAddress, cluster });
   if (!input.success) {
     return {
       success: false,
-      error: {
-        error: "Invalid wallet address",
-        code: "INVALID_WALLET",
-      },
+      error: { error: "Invalid input", code: "INVALID_WALLET" },
     };
   }
 
-  // 2. Client Initialization
   const { ratelimit, groq } = getClients();
-
-  // 3. Rate-limit check
   const { success: rateLimitOk } = await ratelimit.limit(walletAddress);
   if (!rateLimitOk) {
     return {
       success: false,
-      error: {
-        error: "Rate limit exceeded. Please wait 60 seconds.",
-        code: "RATE_LIMITED",
-      },
+      error: { error: "Wait 60s", code: "RATE_LIMITED" },
     };
   }
 
   try {
-    // 3. Fetch balances via Helius DAS
-    let holdings = await fetchHeliusBalances(walletAddress);
+    const rpcUrl =
+      cluster === "devnet" ? env.HELIUS_DEVNET_RPC_URL : env.HELIUS_RPC_URL;
+    let holdings = await fetchHeliusBalances(walletAddress, rpcUrl);
 
-    // 4. Enrich missing prices via Jupiter V3
-    holdings = await enrichWithJupiterPrices(holdings);
+    if (cluster === "mainnet-beta") {
+      holdings = await enrichWithJupiterPrices(holdings);
+    } else {
+      // Devnet pricing mock
+      for (const h of holdings) {
+        if (h.priceUsd === 0) {
+          h.priceUsd = 1.0;
+          h.valueUsd = h.balance * h.priceUsd;
+        }
+      }
+      const totalValue = holdings.reduce((s, h) => s + h.valueUsd, 0);
+      if (totalValue > 0) {
+        for (const h of holdings) {
+          h.allocationPct = Number(((h.valueUsd / totalValue) * 100).toFixed(2));
+        }
+      }
+    }
 
-    // 5. Generate risk report
     const riskReport = generateRiskReport(holdings);
+    const yieldMatches =
+      cluster === "mainnet-beta"
+        ? await matchYieldOpportunities(riskReport.idleCapital)
+        : []; // No devnet yields for now
 
-    // 6. Match yield opportunities for idle capital
-    const yieldMatches = await matchYieldOpportunities(riskReport.idleCapital);
-
-    // 7. AI synthesis via Groq
-    const aiSummary = await synthesizeWithAI(holdings, riskReport, yieldMatches, groq);
+    const aiSummary = await synthesizeWithAI(
+      holdings,
+      riskReport,
+      yieldMatches,
+      groq
+    );
 
     return {
       success: true,
@@ -408,16 +396,10 @@ export async function analyzePortfolio(
       },
     };
   } catch (err) {
-    console.error("[analyze] Pipeline error:", err);
+    console.error("[analyze] Error:", err);
     return {
       success: false,
-      error: {
-        error:
-          err instanceof Error
-            ? err.message
-            : "An unexpected error occurred during analysis.",
-        code: "INTERNAL",
-      },
+      error: { error: "Server error", code: "INTERNAL" },
     };
   }
 }

@@ -22,16 +22,17 @@ const WalletMultiButton = dynamic(
 
 export default function DashboardPage() {
   const { publicKey, connected } = useWallet();
+  const [cluster, setCluster] = useState<"mainnet-beta" | "devnet">("mainnet-beta");
   const [isPending, startTransition] = useTransition();
   const [data, setData] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
 
-  const performAnalysis = async () => {
+  const performAnalysis = async (targetCluster = cluster) => {
     if (!publicKey) return;
 
     setError(null);
     startTransition(async () => {
-      const response = await analyzePortfolio(publicKey.toBase58());
+      const response = await analyzePortfolio(publicKey.toBase58(), targetCluster);
 
       if (response.success) {
         setData(response.data);
@@ -39,6 +40,12 @@ export default function DashboardPage() {
         setError(response.error.error);
       }
     });
+  };
+
+  const toggleCluster = () => {
+    const nextCluster = cluster === "mainnet-beta" ? "devnet" : "mainnet-beta";
+    setCluster(nextCluster);
+    performAnalysis(nextCluster);
   };
 
   // Auto-analyze on connect
@@ -77,11 +84,45 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-800 pb-8">
         <div className="space-y-1">
-          <h2 className="text-2xl font-bold text-zinc-100 flex items-center gap-2">
+          <h2 className="text-2xl font-bold text-zinc-100 flex items-center gap-4">
             Optimizer Dashboard
-            <span className="text-[10px] uppercase tracking-widest bg-emerald-500/10 text-emerald-400 px-2 py-0.5 rounded-full border border-emerald-500/20">
-              Mainnet
-            </span>
+            <div className="bg-zinc-900/80 border border-zinc-800 p-0.5 rounded-xl flex items-center gap-0.5 ml-2">
+              <button
+                onClick={() => {
+                  if (cluster !== "mainnet-beta") {
+                    setCluster("mainnet-beta");
+                    performAnalysis("mainnet-beta");
+                  }
+                }}
+                disabled={isPending}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all",
+                  cluster === "mainnet-beta"
+                    ? "bg-emerald-500 text-zinc-950 shadow-[0_0_12px_rgba(16,185,129,0.3)]"
+                    : "text-zinc-500 hover:text-zinc-300"
+                )}
+              >
+                Mainnet
+              </button>
+              <button
+                onClick={() => {
+                  if (cluster !== "devnet") {
+                    setCluster("devnet");
+                    performAnalysis("devnet");
+                  }
+                }}
+                disabled={isPending}
+                className={cn(
+                  "px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all",
+                  cluster === "devnet"
+                    ? "bg-amber-500 text-zinc-950 shadow-[0_0_12px_rgba(245,158,11,0.3)]"
+                    : "text-zinc-500 hover:text-zinc-300"
+                )}
+              >
+                Devnet
+              </button>
+
+            </div>
           </h2>
           <p className="text-xs text-zinc-500 font-mono">
             Wallet: {publicKey?.toBase58().slice(0, 4)}...{publicKey?.toBase58().slice(-4)}
@@ -94,7 +135,7 @@ export default function DashboardPage() {
             size="sm"
             className="rounded-xl border-zinc-800 text-zinc-400 hover:text-zinc-100"
             disabled={isPending}
-            onClick={performAnalysis}
+            onClick={() => performAnalysis()}
           >
             <RefreshCw className={cn("size-3.5 mr-2", isPending && "animate-spin")} />
             {isPending ? "Analyzing..." : "Refresh Stats"}
@@ -102,6 +143,8 @@ export default function DashboardPage() {
           <WalletMultiButton className="!bg-zinc-800 hover:!bg-zinc-700 !rounded-xl !h-8 !px-4 !text-xs" />
         </div>
       </div>
+
+
 
       {error ? (
         <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm flex items-center gap-3">

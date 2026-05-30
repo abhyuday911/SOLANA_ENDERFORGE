@@ -7,6 +7,14 @@ const serverEnvSchema = z.object({
     .trim()
     .url()
     .describe("Helius mainnet RPC endpoint (https)"),
+  HELIUS_DEVNET_RPC_URL: z
+    .string()
+    .trim()
+    .url()
+    .optional()
+    .default("https://api.devnet.solana.com")
+    .describe("Helius devnet RPC endpoint (https)"),
+
 
   // Jupiter Price API v3
   JUPITER_API_KEY: z
