@@ -136,7 +136,6 @@ async function fetchHeliusBalances(
 
   const holdings: TokenHolding[] = [];
 
-  // Parse token holdings
   for (const item of items) {
     const parsed = HeliusTokenSchema.safeParse(item);
     if (!parsed.success) continue;
@@ -151,7 +150,6 @@ async function fetchHeliusBalances(
     const priceUsd = tokenInfo.price_info?.price_per_token ?? 0;
     const valueUsd = tokenInfo.price_info?.total_price ?? uiBalance * priceUsd;
 
-    // Allow more assets on devnet (less strict dust filter)
     if (valueUsd < 0.01 && uiBalance < 0.000001) continue;
 
     holdings.push({
@@ -163,10 +161,10 @@ async function fetchHeliusBalances(
       valueUsd,
       allocationPct: 0,
       logoUri: data.content.links?.image ?? "",
+      isKnownYieldPosition: false,
     });
   }
 
-  // Add native SOL
   if (nativeBalance) {
     const solBalance = (nativeBalance.lamports ?? 0) / 1e9;
     const solPrice = nativeBalance.price_per_sol ?? 0;
@@ -183,11 +181,11 @@ async function fetchHeliusBalances(
         allocationPct: 0,
         logoUri:
           "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png",
+        isKnownYieldPosition: false,
       });
     }
   }
 
-  // Initial calculation of allocation percentages
   const totalValue = holdings.reduce((s, h) => s + h.valueUsd, 0);
   if (totalValue > 0) {
     for (const h of holdings) {
@@ -231,7 +229,6 @@ async function enrichWithJupiterPrices(
       }
     }
 
-    // Recalculate allocations after pricing
     const totalValue = holdings.reduce((s, h) => s + h.valueUsd, 0);
     if (totalValue > 0) {
       for (const h of holdings) {
@@ -273,32 +270,37 @@ async function synthesizeWithAI(
   const yieldSummary =
     yieldMatches.length > 0
       ? yieldMatches
-          .map(
-            (ym) =>
-              `${ym.tokenSymbol}: Top pool = ${ym.opportunities[0]?.protocol} @ ${ym.opportunities[0]?.apyTotal.toFixed(2)}% APY`
-          )
-          .join("\n")
+        .map(
+          (ym) =>
+            `${ym.tokenSymbol}: Top pool = ${ym.opportunities[0]?.protocol} @ ${ym.opportunities[0]?.apyTotal.toFixed(2)}% APY`
+        )
+        .join("\n")
       : "No yield opportunities matched.";
 
-  const prompt = `You are a DeFi strategist for Solana. Analyze this portfolio:
+  const prompt = `You are a DeFi strategist for Solana. Analyze this portfolio and provide a concise strategic assessment in 3-5 paragraphs of markdown.
   
 ## Portfolio
 ${portfolioSummary}
 
-## Risk
+## Risk Analysis
 ${riskSummary}
 
-## Yields
+## Yield Opportunities
 ${yieldSummary}
 
-Provide a concise 3-5 paragraph strategic assessment in markdown. Use Emerald themes for positive yield steps.`;
+IMPORTANT: 
+- Highlight key yield opportunities and specific strategies by wrapping them in double asterisks **like this**. 
+- DO NOT use HTML tags like <font> or <span>.
+- Use a professional yet encouraging tone.
+- Ensure the assessment is data-driven.`;
+
 
   try {
     const completion = await groq.chat.completions.create({
       messages: [
         {
           role: "system",
-          content: "You are a professional Solana DeFi assistant.",
+          content: "You are a professional Solana DeFi strategist. Format in markdown.",
         },
         { role: "user", content: prompt },
       ],
@@ -312,8 +314,8 @@ Provide a concise 3-5 paragraph strategic assessment in markdown. Use Emerald th
       "Unable to generate AI summary at this time."
     );
   } catch (err) {
-    console.error("[groq] AI failed:", err);
-    return "AI synthesis unavailable.";
+    console.error("[groq] AI synthesis failed:", err);
+    return "AI synthesis unavailable at this moment.";
   }
 }
 
@@ -336,7 +338,7 @@ export async function analyzePortfolio(
   if (!input.success) {
     return {
       success: false,
-      error: { error: "Invalid input", code: "INVALID_WALLET" },
+      error: { error: "Invalid input parameters", code: "INVALID_WALLET" },
     };
   }
 
@@ -345,7 +347,10 @@ export async function analyzePortfolio(
   if (!rateLimitOk) {
     return {
       success: false,
-      error: { error: "Wait 60s", code: "RATE_LIMITED" },
+      error: {
+        error: "Rate limit exceeded. Please wait 60 seconds.",
+        code: "RATE_LIMITED",
+      },
     };
   }
 
@@ -357,7 +362,6 @@ export async function analyzePortfolio(
     if (cluster === "mainnet-beta") {
       holdings = await enrichWithJupiterPrices(holdings);
     } else {
-      // Devnet pricing mock
       for (const h of holdings) {
         if (h.priceUsd === 0) {
           h.priceUsd = 1.0;
@@ -376,7 +380,7 @@ export async function analyzePortfolio(
     const yieldMatches =
       cluster === "mainnet-beta"
         ? await matchYieldOpportunities(riskReport.idleCapital)
-        : []; // No devnet yields for now
+        : [];
 
     const aiSummary = await synthesizeWithAI(
       holdings,
@@ -396,10 +400,16 @@ export async function analyzePortfolio(
       },
     };
   } catch (err) {
-    console.error("[analyze] Error:", err);
+    console.error("[analyze] Pipeline error:", err);
     return {
       success: false,
-      error: { error: "Server error", code: "INTERNAL" },
+      error: {
+        error:
+          err instanceof Error
+            ? err.message
+            : "An unexpected error occurred during analysis.",
+        code: "INTERNAL",
+      },
     };
   }
 }

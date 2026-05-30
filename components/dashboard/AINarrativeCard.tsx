@@ -41,10 +41,12 @@ export function AINarrativeCard({ summary, isLoading }: AINarrativeCardProps) {
                 h2: ({ ...props }) => <h2 className="text-emerald-400 font-bold mt-6 mb-2" {...props} />,
                 h3: ({ ...props }) => <h3 className="text-emerald-400 font-semibold mt-4 mb-2" {...props} />,
                 h4: ({ ...props }) => <h4 className="text-emerald-400 font-semibold" {...props} />,
+                strong: ({ ...props }) => <strong className="text-emerald-400/60 font-bold" {...props} />,
               }}
             >
               {summary}
             </ReactMarkdown>
+
           </div>
 
         ) : (

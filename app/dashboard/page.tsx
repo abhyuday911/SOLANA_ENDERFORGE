@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition, useRef } from "react";
+
 import dynamic from "next/dynamic";
 import { useWallet } from "@solana/wallet-adapter-react";
 import { analyzePortfolio, type AnalysisResult } from "@/app/actions/analyze";
@@ -26,21 +27,30 @@ export default function DashboardPage() {
   const [isPending, startTransition] = useTransition();
   const [data, setData] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  
+  // Track current request to prevent race conditions
+  const analysisRequestId = useRef(0);
 
   const performAnalysis = async (targetCluster = cluster) => {
     if (!publicKey) return;
 
+    const requestId = ++analysisRequestId.current;
+    
     setError(null);
     startTransition(async () => {
       const response = await analyzePortfolio(publicKey.toBase58(), targetCluster);
 
-      if (response.success) {
-        setData(response.data);
-      } else {
-        setError(response.error.error);
+      // Only update if this is still the latest request
+      if (requestId === analysisRequestId.current) {
+        if (response.success) {
+          setData(response.data);
+        } else {
+          setError(response.error.error);
+        }
       }
     });
   };
+
 
   const toggleCluster = () => {
     const nextCluster = cluster === "mainnet-beta" ? "devnet" : "mainnet-beta";
@@ -94,7 +104,6 @@ export default function DashboardPage() {
                     performAnalysis("mainnet-beta");
                   }
                 }}
-                disabled={isPending}
                 className={cn(
                   "px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all",
                   cluster === "mainnet-beta"
@@ -111,7 +120,6 @@ export default function DashboardPage() {
                     performAnalysis("devnet");
                   }
                 }}
-                disabled={isPending}
                 className={cn(
                   "px-2.5 py-1 rounded-lg text-[9px] font-bold uppercase tracking-wider transition-all",
                   cluster === "devnet"
@@ -121,8 +129,8 @@ export default function DashboardPage() {
               >
                 Devnet
               </button>
-
             </div>
+
           </h2>
           <p className="text-xs text-zinc-500 font-mono">
             Wallet: {publicKey?.toBase58().slice(0, 4)}...{publicKey?.toBase58().slice(-4)}
@@ -150,9 +158,10 @@ export default function DashboardPage() {
         <div className="p-4 rounded-2xl bg-rose-500/10 border border-rose-500/20 text-rose-400 text-sm flex items-center gap-3">
           <ShieldAlert className="size-5 shrink-0" />
           <p>{error}</p>
-          <Button variant="ghost" size="sm" className="ml-auto hover:bg-rose-500/10 h-7" onClick={performAnalysis}>
+          <Button variant="ghost" size="sm" className="ml-auto hover:bg-rose-500/10 h-7" onClick={() => performAnalysis()}>
             Retry
           </Button>
+
         </div>
       ) : null}
 

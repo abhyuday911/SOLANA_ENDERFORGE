@@ -30,7 +30,7 @@ export function TokenHoldingsTable({ holdings }: TokenHoldingsTableProps) {
         </TableHeader>
         <TableBody>
           {holdings.map((token) => (
-            <TableRow key={token.mint} className="border-zinc-800 group transition-colors">
+            <TableRow key={`${token.mint}+ ${token.name}`} className="border-zinc-800 group transition-colors">
               <TableCell className="font-medium">
                 <div className="flex items-center gap-2">
                   {token.logoUri ? (
