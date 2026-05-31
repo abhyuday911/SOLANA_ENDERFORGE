@@ -21,7 +21,7 @@ import {
   generateRiskReport,
   type RiskReport,
 } from "@/lib/engine";
-import { matchYieldOpportunities, getGlobalTopYields, type YieldMatch } from "@/lib/yield";
+import { matchYieldOpportunities, type AssetGroupOpportunity } from "@/lib/yield";
 
 // ─── Clients Helper ─────────────────────────────────────────────────────────
 
@@ -88,7 +88,7 @@ const JupiterPriceSchema = z.record(
 export interface AnalysisResult {
   holdings: TokenHolding[];
   riskReport: RiskReport;
-  yieldMatches: YieldMatch[];
+  activeYieldOpportunities: AssetGroupOpportunity[];
   aiSummary: string;
   timestamp: number;
   aiError?: {
@@ -165,7 +165,6 @@ async function fetchHeliusBalances(
       valueUsd,
       allocationPct: 0,
       logoUri: data.content.links?.image ?? "",
-      isKnownYieldPosition: false,
     });
   }
 
@@ -185,7 +184,6 @@ async function fetchHeliusBalances(
         allocationPct: 0,
         logoUri:
           "https://raw.githubusercontent.com/solana-labs/token-list/main/assets/mainnet/So11111111111111111111111111111111111111112/logo.png",
-        isKnownYieldPosition: false,
       });
     }
   }
@@ -251,15 +249,15 @@ async function enrichWithJupiterPrices(
 async function synthesizeWithAI(
   holdings: TokenHolding[],
   riskReport: RiskReport,
-  yieldMatches: YieldMatch[],
+  activeYieldOpportunities: AssetGroupOpportunity[],
   groq: Groq
 ): Promise<{ text: string; error?: { code: string; message: string } }> {
   if (holdings.length === 0) {
     return {
       text: `Your wallet appears to be empty – no assets were detected.
-
+ 
 There are no concentration risks or yield opportunities to analyze at this time.
-
+ 
 To get a meaningful analysis, please deposit some SOL or SPL tokens into your wallet and refresh the dashboard.`
     };
   }
@@ -280,15 +278,14 @@ To get a meaningful analysis, please deposit some SOL or SPL tokens into your wa
     riskReport.concentrationRisks.length > 0
       ? `Concentration Risks: ${riskReport.concentrationRisks.map((c) => `${c.symbol} at ${c.allocationPct.toFixed(1)}%`).join(", ")}`
       : "No concentration risks detected.",
-    `Idle Capital: $${riskReport.idleCapital.reduce((s, a) => s + a.valueUsd, 0).toFixed(2)}`,
   ].join("\n");
 
   const yieldSummary =
-    yieldMatches.length > 0
-      ? yieldMatches
+    activeYieldOpportunities.length > 0
+      ? activeYieldOpportunities
         .map(
           (ym) =>
-            `${ym.tokenSymbol}: Top pool = ${ym.opportunities[0]?.protocol} @ ${ym.opportunities[0]?.apyTotal.toFixed(2)}% APY`
+            `${ym.symbol}: Top pool = ${ym.opportunities[0]?.protocolName} @ ${ym.opportunities[0]?.apy.toFixed(2)}% APY`
         )
         .join("\n")
       : "No yield opportunities matched.";
@@ -297,13 +294,13 @@ To get a meaningful analysis, please deposit some SOL or SPL tokens into your wa
   
 ## Portfolio
 ${portfolioSummary}
-
+ 
 ## Risk Analysis
 ${riskSummary}
-
+ 
 ## Yield Opportunities
 ${yieldSummary}
-
+ 
 IMPORTANT: 
 - Highlight key yield opportunities and specific strategies by wrapping them in double asterisks **like this**. 
 - DO NOT use HTML tags like <font> or <span>.
@@ -339,11 +336,11 @@ IMPORTANT:
     if (isRateLimit) {
       return {
         text: `⚠️ **AI Credits Exceeded / Rate Limit Reached**
-
+ 
 Enderforge is currently experiencing extremely high volume, or our Groq AI API credits/limits have been temporarily exceeded. 
-
+ 
 Your technical risk telemetry, concentration analysis, and active yield matching matrices are fully loaded and operational below. 
-
+ 
 *Please try again in after 24 hours once the token allocation window resets.*`,
         error: {
           code: "AI_RATE_LIMIT",
@@ -420,27 +417,15 @@ export async function analyzePortfolio(
     }
 
     const riskReport = generateRiskReport(holdings);
-    let yieldMatches = await matchYieldOpportunities(riskReport.idleCapital);
+    const activeYieldOpportunities = await matchYieldOpportunities(holdings);
 
-    // Fallback to Global Top Yields if no portfolio matches exist (or if on devnet with no mainnet equivalent assets)
-    if (yieldMatches.length === 0) {
-      const globalTop = await getGlobalTopYields(5);
-      if (globalTop.length > 0) {
-        yieldMatches = [
-          {
-            tokenSymbol: "GLOBAL",
-            idleValueUsd: 0,
-            opportunities: globalTop,
-            isFallback: true,
-          },
-        ];
-      }
-    }
+    // Yield opportunities are strictly based on assets currently in the user's wallet.
+    // If no portfolio assets match, we return an empty array to render the inactive telemetry shell.
 
     const aiResult = await synthesizeWithAI(
       holdings,
       riskReport,
-      yieldMatches,
+      activeYieldOpportunities,
       groq
     );
 
@@ -449,7 +434,7 @@ export async function analyzePortfolio(
       data: {
         holdings,
         riskReport,
-        yieldMatches,
+        activeYieldOpportunities,
         aiSummary: aiResult.text,
         aiError: aiResult.error,
         timestamp: Date.now(),

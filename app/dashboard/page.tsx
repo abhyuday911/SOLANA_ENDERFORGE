@@ -209,7 +209,7 @@ export default function DashboardPage() {
               {/* Left: AI & Yield */}
               <div className="lg:col-span-2 space-y-8">
                 <AINarrativeCard summary={data.aiSummary} isLoading={isPending} />
-                <YieldMatrix matches={data.yieldMatches} />
+                <YieldMatrix opportunities={data.activeYieldOpportunities} />
               </div>
 
               {/* Right: Risk Analysis */}
