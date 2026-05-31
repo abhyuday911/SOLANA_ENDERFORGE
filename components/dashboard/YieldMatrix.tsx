@@ -1,9 +1,10 @@
 "use client";
 
-import { ExternalLink, TrendingUp, HelpCircle } from "lucide-react";
+import { ExternalLink, TrendingUp, HelpCircle, Sparkles } from "lucide-react";
 import type { YieldMatch } from "@/lib/yield";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 interface YieldMatrixProps {
   matches: YieldMatch[];
@@ -45,28 +46,65 @@ export function YieldMatrix({ matches }: YieldMatrixProps) {
         {matches.map((match) => (
           <div 
             key={match.tokenSymbol} 
-            className="p-3.5 rounded-2xl bg-graphite-sunk shadow-milled-sunk border border-zinc-950/80 space-y-3"
+            className={cn(
+              "p-3.5 rounded-2xl bg-graphite-sunk shadow-milled-sunk border space-y-3 transition-all duration-300",
+              match.isFallback 
+                ? "border-amber-500/20 hover:border-amber-500/30" 
+                : "border-zinc-950/80"
+            )}
           >
             {/* Token allocation label */}
             <div className="flex justify-between items-center text-[9px] font-mono tracking-wider border-b border-zinc-950/40 pb-2">
-              <span className="font-bold text-zinc-400 uppercase tracking-widest">{match.tokenSymbol} ALLOCATION</span>
-              <span className="text-zinc-500 uppercase">
-                Idle: <span className="text-zinc-300 font-bold font-mono">${match.idleValueUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-              </span>
+              {match.isFallback ? (
+                <span className="font-bold text-amber-500 uppercase tracking-wider flex items-center gap-1.5 animate-pulse">
+                  <Sparkles className="size-3 text-amber-500" />
+                  GLOBAL YIELD ROUTING
+                </span>
+              ) : (
+                <span className="font-bold text-zinc-400 uppercase tracking-widest">{match.tokenSymbol} ALLOCATION</span>
+              )}
+              
+              {match.isFallback ? (
+                <span className="text-[8px] font-bold font-mono text-amber-400/90 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                  Solana Featured
+                </span>
+              ) : (
+                <span className="text-zinc-500 uppercase">
+                  Idle: <span className="text-zinc-300 font-bold font-mono">${match.idleValueUsd.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                </span>
+              )}
             </div>
 
             {/* Opportunities List for this token */}
             <div className="space-y-2">
-              {match.opportunities.slice(0, 2).map((opp) => (
+              {match.opportunities.slice(0, match.isFallback ? 5 : 2).map((opp) => (
                 <div 
                   key={opp.poolId} 
                   className="flex items-center justify-between p-2.5 rounded-xl bg-graphite-plate/30 border border-zinc-950/20 hover:border-amber-500/20 hover:bg-graphite-plate/80 transition-all group active:translate-y-px"
                 >
                   <div className="flex flex-col">
-                    <span className="text-xs font-bold text-zinc-200 font-mono tracking-tight">
-                      {opp.protocol}
-                    </span>
-                    <span className="text-[9px] text-zinc-500 font-mono uppercase truncate max-w-[150px]">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-xs font-bold text-zinc-200 font-mono tracking-tight">
+                        {opp.protocol}
+                      </span>
+                      {opp.score && (
+                        <span 
+                          title={opp.reason}
+                          className={cn(
+                            "px-1.5 py-0.5 rounded text-[7px] font-mono font-bold uppercase border cursor-help select-none leading-none tracking-wider",
+                            opp.score === 100 
+                              ? "bg-emerald-500/10 border-emerald-500/20 text-emerald-400"
+                              : "bg-blue-500/10 border-blue-500/20 text-blue-400"
+                          )}
+                        >
+                          T{opp.score === 100 ? "1" : "2"} Match
+                        </span>
+                      )}
+                    </div>
+                    <span 
+                      title={opp.reason}
+                      className="text-[9px] text-zinc-500 font-mono uppercase truncate max-w-[150px] cursor-help"
+                    >
                       {opp.poolName}
                     </span>
                   </div>

@@ -24,10 +24,14 @@ export interface YieldPool {
   apyTotal: number;
   /** TVL in USD */
   tvlUsd: number;
-  /** Underlying token symbols */
+  /** Underlying token symbols/mints */
   underlyingTokens: string[];
   /** Pool chain */
   chain: string;
+  /** Match Score (100 = Mint Match, 80 = Canonical Symbol Match) */
+  score?: number;
+  /** Reason for the match */
+  reason?: string;
 }
 
 export interface YieldMatch {
@@ -37,6 +41,31 @@ export interface YieldMatch {
   idleValueUsd: number;
   /** Matched yield opportunities, sorted by APY desc */
   opportunities: YieldPool[];
+  /** Is this fallback data from global top yields? */
+  isFallback?: boolean;
+}
+
+export async function getGlobalTopYields(limit: number = 5): Promise<YieldPool[]> {
+  const pools = await fetchSolanaYieldPools();
+  return pools
+    .map(
+      (p): YieldPool => ({
+        poolId: p.pool,
+        protocol: p.project,
+        poolName: p.symbol,
+        apyBase: p.apyBase ?? 0,
+        apyReward: p.apyReward ?? 0,
+        apyTotal: p.apy ?? (p.apyBase ?? 0) + (p.apyReward ?? 0),
+        tvlUsd: p.tvlUsd,
+        underlyingTokens: p.underlyingTokens ?? [],
+        chain: p.chain,
+        score: 100,
+        reason: "Global featured yield route."
+      })
+    )
+    .filter((p) => p.apyTotal > 0 && p.tvlUsd > 10_000)
+    .sort((a, b) => b.apyTotal - a.apyTotal)
+    .slice(0, limit);
 }
 
 // ─── DefiLlama response validation ──────────────────────────────────────────
@@ -50,20 +79,12 @@ const DefiLlamaPoolSchema = z.object({
   apyReward: z.number().nullable().optional(),
   apy: z.number().nullable().optional(),
   tvlUsd: z.number(),
+  underlyingTokens: z.array(z.string()).nullable().optional(),
 });
 
 type DefiLlamaPool = z.infer<typeof DefiLlamaPoolSchema>;
 
-// ─── Target protocols on Solana ──────────────────────────────────────────────
-
-const TARGET_PROTOCOLS = new Set([
-  "kamino-lending",
-  "kamino-liquidity",
-  "drift",
-  "marginfi",
-  "marinade-finance",
-  "jito",
-]);
+// Whitelists removed completely for discovery-driven dynamic matching
 
 // ─── Token symbol matching map ───────────────────────────────────────────────
 
@@ -79,7 +100,7 @@ const TOKEN_MATCH_ALIASES: Record<string, string[]> = {
 };
 
 /**
- * Fetch Solana yield pools from DefiLlama for our target protocols.
+ * Fetch Solana yield pools from DefiLlama.
  * Caches in-memory for 5 minutes.
  */
 let poolCache: { data: DefiLlamaPool[]; timestamp: number } | null = null;
@@ -102,14 +123,10 @@ async function fetchSolanaYieldPools(): Promise<DefiLlamaPool[]> {
   const json = await res.json();
   const allPools = (json.data as unknown[]) ?? [];
 
-  // Filter to Solana + target protocols
+  // Filter dynamically to Solana chain pools only (SLUG-AGNOSTIC!)
   const solanaPoolsRaw = allPools.filter((p: unknown) => {
     const pool = p as Record<string, unknown>;
-    return (
-      pool.chain === "Solana" &&
-      typeof pool.project === "string" &&
-      TARGET_PROTOCOLS.has(pool.project)
-    );
+    return pool.chain === "Solana";
   });
 
   const solanaPools: DefiLlamaPool[] = [];
@@ -125,7 +142,7 @@ async function fetchSolanaYieldPools(): Promise<DefiLlamaPool[]> {
 }
 
 /**
- * Match idle wallet tokens to yield opportunities.
+ * Match idle wallet tokens to yield opportunities using Multi-Layer Scoring.
  */
 export async function matchYieldOpportunities(
   idleAssets: { symbol: string; valueUsd: number; mint: string }[]
@@ -136,43 +153,91 @@ export async function matchYieldOpportunities(
   const matches: YieldMatch[] = [];
 
   for (const asset of idleAssets) {
-    const aliases = TOKEN_MATCH_ALIASES[asset.symbol.toUpperCase()] ?? [
-      asset.symbol.toUpperCase(),
-    ];
+    const userMintLower = asset.mint.toLowerCase();
+    const userSymbolUpper = asset.symbol.toUpperCase();
+    const aliases = TOKEN_MATCH_ALIASES[userSymbolUpper] ?? [userSymbolUpper];
 
-    const opportunities = pools
-      .filter((p) => {
-        const poolSymbol = p.symbol.toUpperCase();
-        return aliases.some(
-          (alias) =>
-            poolSymbol.includes(alias.toUpperCase()) ||
-            poolSymbol.startsWith(alias.toUpperCase())
+    const opportunities: YieldPool[] = [];
+
+    for (const pool of pools) {
+      let matchedScore = 0;
+      let matchReason = "";
+
+      // Tier 1: Mint Address Match
+      if (pool.underlyingTokens && pool.underlyingTokens.length > 0) {
+        const hasMintMatch = pool.underlyingTokens.some(
+          (t) => t.toLowerCase() === userMintLower
         );
-      })
-      .map(
-        (p): YieldPool => ({
-          poolId: p.pool,
-          protocol: p.project,
-          poolName: p.symbol,
-          apyBase: p.apyBase ?? 0,
-          apyReward: p.apyReward ?? 0,
-          apyTotal: p.apy ?? (p.apyBase ?? 0) + (p.apyReward ?? 0),
-          tvlUsd: p.tvlUsd,
-          underlyingTokens: p.symbol.split("-"),
-          chain: p.chain,
-        })
-      )
-      .filter((p) => p.apyTotal > 0 && p.tvlUsd > 10_000)
-      .sort((a, b) => b.apyTotal - a.apyTotal)
-      .slice(0, 5); // Top 5 pools per asset
+        if (hasMintMatch) {
+          matchedScore = 100;
+          matchReason = "Exact on-chain mint address match verified.";
+        }
+      }
+
+      // Tier 2: Canonical Symbol Match
+      if (matchedScore === 0) {
+        const poolSymbolUpper = pool.symbol.toUpperCase();
+        const isCanonicalMatch = aliases.some(
+          (alias) => poolSymbolUpper === alias.toUpperCase()
+        );
+        if (isCanonicalMatch) {
+          matchedScore = 80;
+          matchReason = "Canonical symbol match resolved.";
+        }
+      }
+
+      const apyTotal = pool.apy ?? (pool.apyBase ?? 0) + (pool.apyReward ?? 0);
+      if (matchedScore > 0 && apyTotal > 0 && pool.tvlUsd > 10_000) {
+        opportunities.push({
+          poolId: pool.pool,
+          protocol: pool.project,
+          poolName: pool.symbol,
+          apyBase: pool.apyBase ?? 0,
+          apyReward: pool.apyReward ?? 0,
+          apyTotal: apyTotal,
+          tvlUsd: pool.tvlUsd,
+          underlyingTokens: pool.underlyingTokens ?? [],
+          chain: pool.chain,
+          score: matchedScore,
+          reason: matchReason,
+        });
+      }
+    }
 
     if (opportunities.length > 0) {
+      // Sort by score descending (Tier 1 first), then by APY descending
+      opportunities.sort((a, b) => {
+        if (b.score !== a.score) {
+          return (b.score ?? 0) - (a.score ?? 0);
+        }
+        return b.apyTotal - a.apyTotal;
+      });
+
       matches.push({
         tokenSymbol: asset.symbol,
         idleValueUsd: asset.valueUsd,
-        opportunities,
+        opportunities: opportunities.slice(0, 10), // Return top 10 opportunities per asset
       });
     }
+  }
+
+  // Dev-mode table telemetry
+  if (process.env.NODE_ENV === "development") {
+    console.log("\n====== YIELD OPPORTUNITIES TELEMETRY ======");
+    console.log(`[yield] Fetch - Total Solana pools scanned: ${pools.length}`);
+    matches.forEach((m) => {
+      console.log(`\nAsset: ${m.tokenSymbol} | Idle Value: $${m.idleValueUsd.toFixed(2)} | Matches Found: ${m.opportunities.length}`);
+      const telemetryTable = m.opportunities.map((opp) => ({
+        Protocol: opp.protocol,
+        Pool: opp.poolName,
+        APY: `${opp.apyTotal.toFixed(2)}%`,
+        TVL: `$${opp.tvlUsd.toLocaleString()}`,
+        Score: opp.score,
+        Reason: opp.reason
+      }));
+      console.table(telemetryTable);
+    });
+    console.log("===========================================\n");
   }
 
   return matches;
