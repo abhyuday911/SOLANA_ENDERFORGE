@@ -9,7 +9,6 @@ export const tokenHoldingSchema = z.object({
   valueUsd: z.number().finite().nonnegative(),
   allocationPct: z.number().finite().min(0).max(100),
   logoUri: z.string(),
-  isKnownYieldPosition: z.boolean().default(false),
 });
 
 export type TokenHolding = z.infer<typeof tokenHoldingSchema>;
@@ -21,23 +20,14 @@ export interface ConcentrationRisk {
   severity: "medium" | "high";
 }
 
-export interface IdleAsset {
-  mint: string;
-  symbol: string;
-  name: string;
-  valueUsd: number;
-  balance: number;
-}
-
 export interface RiskReport {
   totalValueUsd: number;
   hhiRaw: number;
   hhiScore: number;
   concentrationRisks: ConcentrationRisk[];
-  idleCapital: IdleAsset[];
 }
 
-const KNOWN_YIELD_MINTS = new Set<string>([
+export const KNOWN_YIELD_MINTS = new Set<string>([
   "J1toso1uCk3RLmjorhTtrVwY9HJ7X8V9yYac6Y7kGCPn",
   "mSoLzYCxHdYgdzU16g5QSh3i5K3z3KZK7ytfqcJm7So",
   "bSo13r4TkiE4KumL71LsHTPpL2euBYLFx6h9HP3piy1",
@@ -54,8 +44,6 @@ export function withAllocations(holdings: TokenHolding[]): TokenHolding[] {
         totalValueUsd > 0
           ? Number(((holding.valueUsd / totalValueUsd) * 100).toFixed(2))
           : 0,
-      isKnownYieldPosition:
-        holding.isKnownYieldPosition || KNOWN_YIELD_MINTS.has(holding.mint),
     }))
     .sort((a, b) => b.valueUsd - a.valueUsd);
 }
@@ -80,7 +68,7 @@ export function calculateHHI(holdings: TokenHolding[]): {
   if (holdings.length === 0) {
     return { hhiRaw: 0, hhiScore: 100 };
   }
-
+ 
   const hhiRaw = holdings.reduce(
     (sum, holding) => sum + holding.allocationPct ** 2,
     0
@@ -97,20 +85,6 @@ export function calculateHHI(holdings: TokenHolding[]): {
   };
 }
 
-export function findIdleCapital(holdings: TokenHolding[]): IdleAsset[] {
-  return holdings
-    .filter(
-      (holding) => holding.valueUsd > 50 && !holding.isKnownYieldPosition
-    )
-    .map((holding) => ({
-      mint: holding.mint,
-      symbol: holding.symbol,
-      name: holding.name,
-      valueUsd: holding.valueUsd,
-      balance: holding.balance,
-    }));
-}
-
 export function generateRiskReport(rawHoldings: TokenHolding[]): RiskReport {
   const holdings = withAllocations(rawHoldings);
   const totalValueUsd = holdings.reduce((sum, holding) => sum + holding.valueUsd, 0);
@@ -121,6 +95,5 @@ export function generateRiskReport(rawHoldings: TokenHolding[]): RiskReport {
     hhiRaw,
     hhiScore,
     concentrationRisks: analyzeConcentration(holdings),
-    idleCapital: findIdleCapital(holdings),
   };
 }
