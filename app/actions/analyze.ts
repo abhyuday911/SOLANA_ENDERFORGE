@@ -21,7 +21,7 @@ import {
   generateRiskReport,
   type RiskReport,
 } from "@/lib/engine";
-import { matchYieldOpportunities, type YieldMatch } from "@/lib/yield";
+import { matchYieldOpportunities, getGlobalTopYields, type YieldMatch } from "@/lib/yield";
 
 // ─── Clients Helper ─────────────────────────────────────────────────────────
 
@@ -420,10 +420,22 @@ export async function analyzePortfolio(
     }
 
     const riskReport = generateRiskReport(holdings);
-    const yieldMatches =
-      cluster === "mainnet-beta"
-        ? await matchYieldOpportunities(riskReport.idleCapital)
-        : [];
+    let yieldMatches = await matchYieldOpportunities(riskReport.idleCapital);
+
+    // Fallback to Global Top Yields if no portfolio matches exist (or if on devnet with no mainnet equivalent assets)
+    if (yieldMatches.length === 0) {
+      const globalTop = await getGlobalTopYields(5);
+      if (globalTop.length > 0) {
+        yieldMatches = [
+          {
+            tokenSymbol: "GLOBAL",
+            idleValueUsd: 0,
+            opportunities: globalTop,
+            isFallback: true,
+          },
+        ];
+      }
+    }
 
     const aiResult = await synthesizeWithAI(
       holdings,
