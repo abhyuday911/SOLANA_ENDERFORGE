@@ -209,7 +209,16 @@ export default function DashboardPage() {
               {/* Left: AI & Yield */}
               <div className="lg:col-span-2 space-y-8">
                 <AINarrativeCard summary={data.aiSummary} isLoading={isPending} />
-                <YieldMatrix opportunities={data.activeYieldOpportunities} />
+                <YieldMatrix
+                  opportunities={data.activeYieldOpportunities}
+                  stateClassification={
+                    data.holdings.length === 0
+                      ? "EMPTY_WALLET"
+                      : data.activeYieldOpportunities.every((o) => o.stateClassification === "DISCOVERY_OFFLINE")
+                        ? "DISCOVERY_OFFLINE"
+                        : "NO_IDLE_CAPITAL"
+                  }
+                />
               </div>
 
               {/* Right: Risk Analysis */}
