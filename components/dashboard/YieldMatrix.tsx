@@ -18,9 +18,10 @@ import {
 
 interface YieldMatrixProps {
   opportunities: AssetGroupOpportunity[];
+  stateClassification?: "EMPTY_WALLET" | "NO_IDLE_CAPITAL" | "DISCOVERY_OFFLINE";
 }
 
-export function YieldMatrix({ opportunities }: YieldMatrixProps) {
+export function YieldMatrix({ opportunities, stateClassification }: YieldMatrixProps) {
   const [hoveredPopover, setHoveredPopover] = useState<string | null>(null);
   const [popoverCoords, setPopoverCoords] = useState<{ top: number; left: number; width: number } | null>(null);
   const [mounted, setMounted] = useState(false);
@@ -47,8 +48,29 @@ export function YieldMatrix({ opportunities }: YieldMatrixProps) {
     setPopoverCoords(null);
   };
 
+  // Determine which empty state classification to use
+  const resolvedEmptyState = stateClassification || (
+    opportunities.length === 0 ? "EMPTY_WALLET" : "NO_IDLE_CAPITAL"
+  );
+
   // Muted hardware stability empty state if no active vectors are present
   if (opportunities.length === 0) {
+    let badgeText = "";
+    let titleText: string | null = null;
+    let descriptionText = "";
+
+    if (resolvedEmptyState === "EMPTY_WALLET") {
+      badgeText = "WALLET EMPTY";
+      titleText = "NO ASSETS DETECTED";
+      descriptionText = "Connect capital to begin yield discovery. Deposit assets into this wallet and Enderforge will automatically scan for idle yield routes.";
+    } else if (resolvedEmptyState === "DISCOVERY_OFFLINE") {
+      badgeText = "DISCOVERY OFFLINE";
+      descriptionText = "Yield discovery telemetry unavailable. Unable to verify active vault opportunities.";
+    } else {
+      badgeText = "TELEMETRY INACTIVE";
+      descriptionText = "All token allocations are fully mobilized. No idle vectors located.";
+    }
+
     return (
       <div className="rounded-3xl border border-zinc-900/40 bg-graphite-plate border-milled-bevel shadow-milled-elevated p-5 flex flex-col justify-between h-[300px] min-h-[300px] overflow-hidden select-none">
         {/* Header HUD */}
@@ -70,12 +92,17 @@ export function YieldMatrix({ opportunities }: YieldMatrixProps) {
         </div>
 
         {/* Inactive Telemetry Banner */}
-        <div className="flex flex-col items-center justify-center text-center py-6 space-y-2">
+        <div className="flex flex-col items-center justify-center text-center py-6 space-y-2 px-4 max-w-md mx-auto">
           <span className="inline-flex items-center gap-1 text-[8px] font-mono font-bold tracking-[0.15em] text-zinc-500 border border-zinc-900 bg-graphite-sunk shadow-milled-sunk px-2.5 py-1 rounded-full uppercase">
-            TELEMETRY INACTIVE
+            {badgeText}
           </span>
-          <p className="text-[10px] text-zinc-400 font-mono uppercase">
-            All token allocations are fully mobilized. No idle vectors located.
+          {titleText && (
+            <h4 className="text-[10px] font-bold text-zinc-300 font-mono uppercase tracking-wider mt-1 animate-none">
+              {titleText}
+            </h4>
+          )}
+          <p className="text-[10px] text-zinc-400 font-mono uppercase leading-relaxed">
+            {descriptionText}
           </p>
         </div>
 
