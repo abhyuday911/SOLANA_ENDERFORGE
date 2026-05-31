@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Solana Yield Optimizer | AI-Powered DeFi Insights",
+  title: "ENDERFORGE | AI-Powered DeFi Insights",
   description: "Analyze your wallet risks and optimize yields with AI.",
 };
 
