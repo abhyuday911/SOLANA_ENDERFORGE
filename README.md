@@ -33,7 +33,11 @@ DeFi operators face a double-edged sword: **idle capital bleeding opportunity co
 
 Check out our production interface and rapid synchronization flow in action:
 
-https://github.com/user-attachments/assets/6f25d374-d568-4f74-b5d6-7f2c9b94911f
+
+
+https://github.com/user-attachments/assets/24b2cef0-4970-4064-ad95-59032b3b0fc4
+
+
 
 ---
 
@@ -63,7 +67,8 @@ A major vulnerability in modern DeFi dApps is "ghost data"—stale wallet states
 | :--- | :--- | :--- |
 | **Helius DAS Indexing** | Real-time asset parsing, metadata, and native balances retrieval via Helius Search Assets DAS API. | ![Status: Live](https://img.shields.io/badge/Status-Live-emerald?style=flat-square) |
 | **Deterministic Risk Engine** | Local Herfindahl-Hirschman Index (HHI) concentration calculations and allocation thresholds. | ![Status: Live](https://img.shields.io/badge/Status-Live-emerald?style=flat-square) |
-| **Groq Strategy Pulse** | AI-driven qualitative yield advising based on live protocol telemetry mapped via Groq. | ![Status: Under Construction](https://img.shields.io/badge/Status-Under_Construction-orange?style=flat-square) |
+| **Multi-Layer Yield Matrix** | Real-time scanner using two-tier scoring (on-chain mint and canonical alias mapping) to filter, rank, and present the top 2 highest-APY Solana blockchain SPL pools (such as SOL, USDC, USDT, BONK) from DefiLlama (guarded by a >$10k TVL safety threshold). | ![Status: Live](https://img.shields.io/badge/Status-Live-emerald?style=flat-square) |
+| **Groq Strategy Pulse** | AI-driven qualitative yield advising based on live protocol telemetry mapped via Groq. | ![Status: Live](https://img.shields.io/badge/Status-Live-emerald?style=flat-square) |
 | **One-Click Yielding** | Direct-to-vault transactional arrays for Kamino, Drift, and MarginFi. | ![Status: Planned](https://img.shields.io/badge/Status-Planned-blue?style=flat-square) |
 | **MEV-Protected Rebalancing** | Jito-bundle integration to prevent sandwich and front-running risks during portfolio re-allocations. | ![Status: Planned](https://img.shields.io/badge/Status-Planned-blue?style=flat-square) |
 
@@ -71,25 +76,57 @@ A major vulnerability in modern DeFi dApps is "ghost data"—stale wallet states
 
 ## Architecture and Data Funnel
 
-ENDERFORGE utilizes a high-efficiency unidirectional data pipeline. Real-time chain state is indexed, scored, enriched, and synthesized before rendering in the **Enderforge UI Dashboard Shell**:
+ENDERFORGE utilizes a high-efficiency, multi-threaded parallel data funnel. Real-time wallet balances are fetched and priced, then passed in parallel to the local Risk Engine and Yield Matcher, before being unified and synthesized by the Groq LPU into target strategy assessments rendered across our aerospace telemetry dashboard:
 
 ```mermaid
-graph LR
-  A[Solana Wallet] -->|"@solana/kit"| B[Helius DAS]
-  B --> C[Local Risk Engine]
-  C --> D[Jupiter V3 + DefiLlama]
-  D --> E[Groq Llama-3 AI]
-  E --> F[Enderforge Dashboard]
+graph TD
+  subgraph Data Acquisition & Enrichment
+    A[Solana Wallet Address] -->|RPC Query via @solana/kit| B(Helius DAS API)
+    B -->|Balances & Metadatas| C{Requires Pricing?}
+    C -->|Yes| D[Jupiter V3 Price API]
+    C -->|No| E[Enriched Holdings Dataset]
+    D -->|Real-time USD Prices| E
+  end
 
-  style A fill:#FF4500,stroke:#333,stroke-width:1px,color:#fff
-  style B fill:#1F1F1F,stroke:#FF4500,stroke-width:1px,color:#ccc
-  style C fill:#1F1F1F,stroke:#FF4500,stroke-width:1px,color:#ccc
-  style D fill:#1F1F1F,stroke:#CFA430,stroke-width:1px,color:#ccc
-  style E fill:#CFA430,stroke:#333,stroke-width:1px,color:#fff
-  style F fill:#1F1F1F,stroke:#00E5FF,stroke-width:2px,color:#fff
+  subgraph Local & Telemetry Computations
+    E -->|Ingest Holdings| F[Local Risk Engine]
+    E -->|Ingest Holdings| G[Multi-Layer Yield Matcher]
+    
+    F -->|HHI Concentration Formulas| H[Risk Report Output]
+    G -->|Dynamic Sourcing| I[DefiLlama Yields API]
+    I -->|Two-Tier Match Scoring| J[Protocol Registry Enrichment]
+    J -->|Verified APY Opportunities| K[Yield Routes Output]
+  end
+
+  subgraph Cognitive Synthesis & UI Layer
+    E -->|Portfolio Assets| L[Groq LPU Strategy Engine]
+    H -->|HHI Risk Metrics| L
+    K -->|DeFi Opportunities| L
+    
+    L -->|Llama-3.3-70B Synthesis| M[AI Strategic Report]
+    
+    E -->|Render Assets Table| N[Portfolio Summary UI]
+    H -->|Render HHI gauge| O[Risk Gauge UI]
+    K -->|Render Yield Matrix| P[Yield Matrix UI]
+    M -->|Render Narrative| Q[Crucible Intelligence Deck]
+  end
+
+  classDef primary fill:#FF4500,stroke:#333,stroke-width:1px,color:#fff;
+  classDef secondary fill:#1F1F1F,stroke:#FF4500,stroke-width:1px,color:#ccc;
+  classDef yellow fill:#1F1F1F,stroke:#CFA430,stroke-width:1px,color:#ccc;
+  classDef gold fill:#CFA430,stroke:#333,stroke-width:1px,color:#fff;
+  classDef blue fill:#1F1F1F,stroke:#00E5FF,stroke-width:2px,color:#fff;
+
+  class A,E primary;
+  class B,C,D secondary;
+  class F,G,H,I,J,K yellow;
+  class L,M gold;
+  class N,O,P,Q blue;
 ```
 
 ---
+
+
 
 ## Deterministic Risk Engine: Herfindahl-Hirschman Index (HHI)
 
