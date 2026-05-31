@@ -1,7 +1,8 @@
 "use client";
 
-import { Wallet, ShieldAlert, Zap, TrendingUp } from "lucide-react";
+import { Wallet, ShieldAlert, Zap, TrendingUp, Info } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { MetricPopover } from "@/components/ui/metric-popover";
 
 interface PortfolioSummaryProps {
   totalValue: number;
@@ -61,9 +62,77 @@ export function PortfolioSummary({
             ) : (
               <div className="text-xl sm:text-2xl font-black font-mono text-zinc-400 tracking-tight">—</div>
             )}
-            <p className="text-[9px] font-mono text-zinc-500 uppercase mt-0.5">
-              {tokenCount > 0 ? "HHI CALIBRATION INDEX" : "NO ASSETS – INDEX N/A"}
-            </p>
+            {tokenCount > 0 ? (
+              <MetricPopover
+                id="hhi-summary-popover"
+                title="HHI (Portfolio Concentration)"
+                badgeText={
+                  hhiScore > 70
+                    ? "High Score"
+                    : hhiScore > 40
+                    ? "Medium Score"
+                    : "Low Score"
+                }
+                badgeVariant={
+                  hhiScore > 70
+                    ? "success"
+                    : hhiScore > 40
+                    ? "warning"
+                    : "critical"
+                }
+                footerLeft="CALCULATED VIA ON-CHAIN DATA"
+                footerRight="REAL-TIME"
+                align="center"
+                position="bottom"
+                className="group mt-0.5"
+                content={
+                  <div className="space-y-2 select-text">
+                    <p className="leading-relaxed font-sans font-light text-zinc-400">
+                      The HHI score measures your portfolio's concentration risk. Enderforge uses HHI to evaluate concentration risk and identify diversification opportunities.
+                    </p>
+
+                    {/* Mathematical Formula Telemetry Block */}
+                    <div className="bg-graphite-sunk border border-zinc-950/80 rounded-lg p-2 flex flex-col items-center justify-center space-y-1 font-mono text-[9px] select-none">
+                      <span className="text-zinc-500 font-bold text-[7px] uppercase tracking-widest">DETERMINISTIC RISK ENGINE</span>
+                      <span className="text-orange-500 font-black text-[11px] tracking-widest">HHI = Σ (s_i)²</span>
+                      <span className="text-zinc-500 text-[7.5px] text-center uppercase tracking-wider">s_i = % allocation of asset i</span>
+                    </div>
+
+                    <p className="leading-relaxed font-sans font-light text-zinc-400 text-[9.5px]">
+                      The raw index is normalized onto an intuitive <span className="font-mono text-[9px] px-1 py-0.5 rounded border border-zinc-800 bg-graphite-sunk text-zinc-300">1</span> to <span className="font-mono text-[9px] px-1 py-0.5 rounded border border-zinc-800 bg-graphite-sunk text-zinc-300">100</span> scale. Scores <span className="text-rose-400 font-semibold">&le; 40</span> trigger warning flags for assets exceeding 25% allocation.
+                    </p>
+
+                    <div className="pt-2 border-t border-zinc-950/20 space-y-1 text-[8px] uppercase tracking-wider text-zinc-400 font-mono select-none">
+                      <div className="flex justify-between text-zinc-500 font-bold mb-0.5">
+                        <span>STATUS GUIDE</span>
+                        <span>CONCENTRATION</span>
+                      </div>
+                      <div className="flex justify-between text-emerald-400">
+                        <span>HIGH SCORE (&gt;70)</span>
+                        <span>WELL DIVERSIFIED</span>
+                      </div>
+                      <div className="flex justify-between text-amber-500">
+                        <span>MEDIUM SCORE (41-70)</span>
+                        <span>MODERATELY CONCENTRATED</span>
+                      </div>
+                      <div className="flex justify-between text-rose-500">
+                        <span>LOW SCORE (&le;40)</span>
+                        <span>HIGHLY CONCENTRATED</span>
+                      </div>
+                    </div>
+                  </div>
+                }
+              >
+                <span className="text-[9px] font-mono text-zinc-500 uppercase group-hover:text-zinc-300 group-focus:text-zinc-300 transition-colors select-none">
+                  HHI CALIBRATION INDEX
+                </span>
+                <Info className="size-3 ml-1 text-zinc-500 group-hover:text-zinc-300 group-focus:text-zinc-300 transition-colors flex-shrink-0" />
+              </MetricPopover>
+            ) : (
+              <p className="text-[9px] font-mono text-zinc-500 uppercase mt-0.5 select-none">
+                NO ASSETS – INDEX N/A
+              </p>
+            )}
           </div>
         </div>
 

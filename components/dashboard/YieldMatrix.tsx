@@ -1,7 +1,5 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { createPortal } from "react-dom";
 import { TrendingUp } from "lucide-react";
 import type { AssetGroupOpportunity } from "@/lib/yield";
 import { Badge } from "@/components/ui/badge";
@@ -15,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { MetricPopover } from "@/components/ui/metric-popover";
 
 interface YieldMatrixProps {
   opportunities: AssetGroupOpportunity[];
@@ -22,31 +21,6 @@ interface YieldMatrixProps {
 }
 
 export function YieldMatrix({ opportunities, stateClassification }: YieldMatrixProps) {
-  const [hoveredPopover, setHoveredPopover] = useState<string | null>(null);
-  const [popoverCoords, setPopoverCoords] = useState<{ top: number; left: number; width: number } | null>(null);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const handleMouseEnter = (
-    event: React.MouseEvent<HTMLElement> | React.FocusEvent<HTMLElement>,
-    key: string
-  ) => {
-    const rect = event.currentTarget.getBoundingClientRect();
-    setPopoverCoords({
-      top: rect.top,
-      left: rect.left,
-      width: rect.width,
-    });
-    setHoveredPopover(key);
-  };
-
-  const handleMouseLeave = () => {
-    setHoveredPopover(null);
-    setPopoverCoords(null);
-  };
 
   // Determine which empty state classification to use
   const resolvedEmptyState = stateClassification || (
@@ -201,15 +175,21 @@ export function YieldMatrix({ opportunities, stateClassification }: YieldMatrixP
 
                     {/* CLASSIFICATION BADGE WITH PREMIUM POPOVER */}
                     <TableCell className="py-3 relative" colSpan={2}>
-                      <div
-                        className="inline-block focus:outline-none"
-                        onMouseEnter={(e) => handleMouseEnter(e, statusId)}
-                        onMouseLeave={handleMouseLeave}
-                        onFocus={(e) => handleMouseEnter(e, statusId)}
-                        onBlur={handleMouseLeave}
-                        tabIndex={0}
-                        aria-haspopup="true"
-                        aria-expanded={hoveredPopover === statusId}
+                      <MetricPopover
+                        id={statusId}
+                        title="Status Diagnostics"
+                        badgeText="INFO"
+                        badgeVariant="info"
+                        footerLeft="INDEX STATUS"
+                        footerRight="ONLINE"
+                        align="center"
+                        content={
+                          <p className="leading-relaxed font-sans font-light text-zinc-400 select-text">
+                            {isOffline
+                              ? "Enderforge yield indexing telemetry is currently offline due to a connection disruption. Checking dynamic Llama indices..."
+                              : "We matched this token against all active Solana lending and staking vaults. All available capital is fully deployed or outside safety TVL limits."}
+                          </p>
+                        }
                       >
                         <Badge
                           variant="outline"
@@ -222,47 +202,7 @@ export function YieldMatrix({ opportunities, stateClassification }: YieldMatrixP
                         >
                           {isOffline ? "TELEMETRY OFFLINE" : "FULLY OPTIMIZED"}
                         </Badge>
-                      </div>
-
-                      {/* Custom Telemetry Popover */}
-                      {mounted && hoveredPopover === statusId && popoverCoords && typeof document !== "undefined" &&
-                        createPortal(
-                          <div
-                            style={{
-                              position: "fixed",
-                              top: popoverCoords.top,
-                              left: popoverCoords.left + popoverCoords.width / 2,
-                              transform: "translate(-50%, -100%)",
-                              marginTop: "-10px",
-                              zIndex: 9999,
-                            }}
-                            className="pointer-events-none"
-                          >
-                            <div className="w-64 p-3.5 bg-graphite-plate border border-zinc-800 rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-150 text-[10px] font-mono text-zinc-300">
-                              <div className="flex items-center justify-between border-b border-zinc-950/60 pb-1.5 mb-2 select-none">
-                                <span className="font-bold text-[9px] text-orange-500 uppercase tracking-widest">
-                                  Status Diagnostics
-                                </span>
-                                <span className="text-[8px] font-bold px-1.5 py-0.5 rounded border border-zinc-800 bg-graphite-sunk text-zinc-400 leading-none uppercase tracking-wider">
-                                  INFO
-                                </span>
-                              </div>
-                              <div className="space-y-1.5">
-                                <p className="leading-relaxed font-sans font-light text-zinc-400">
-                                  {isOffline
-                                    ? "Enderforge yield indexing telemetry is currently offline due to a connection disruption. Checking dynamic Llama indices..."
-                                    : "We matched this token against all active Solana lending and staking vaults. All available capital is fully deployed or outside safety TVL limits."}
-                                </p>
-                                <div className="pt-2 border-t border-zinc-950/20 flex justify-between items-center text-[8px] text-zinc-500 uppercase tracking-wider">
-                                  <span>INDEX STATUS</span>
-                                  <span>ONLINE</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>,
-                          document.body
-                        )
-                      }
+                      </MetricPopover>
                     </TableCell>
                   </TableRow>
                 );
@@ -324,15 +264,19 @@ export function YieldMatrix({ opportunities, stateClassification }: YieldMatrixP
 
                     {/* MATCH CERTAINTY WITH PREMIUM POPOVER */}
                     <TableCell className="py-3 relative">
-                      <div
-                        className="inline-block focus:outline-none"
-                        onMouseEnter={(e) => handleMouseEnter(e, certaintyId)}
-                        onMouseLeave={handleMouseLeave}
-                        onFocus={(e) => handleMouseEnter(e, certaintyId)}
-                        onBlur={handleMouseLeave}
-                        tabIndex={0}
-                        aria-haspopup="true"
-                        aria-expanded={hoveredPopover === certaintyId}
+                      <MetricPopover
+                        id={certaintyId}
+                        title="Telemetry Diagnostics"
+                        badgeText={`Certainty: ${opp.score}%`}
+                        badgeVariant={isMintMatch ? "success" : "warning"}
+                        footerLeft="INDEXED VIA ON-CHAIN DATA"
+                        footerRight="VERIFIED"
+                        align="center"
+                        content={
+                          <p className="leading-relaxed font-sans font-light text-zinc-400 select-text">
+                            {opp.reasoning}
+                          </p>
+                        }
                       >
                         <Badge
                           variant="outline"
@@ -345,52 +289,7 @@ export function YieldMatrix({ opportunities, stateClassification }: YieldMatrixP
                         >
                           {isMintMatch ? "MINT MATCH" : "SYMBOL MATCH"}
                         </Badge>
-                      </div>
-
-                      {/* Concentric Telemetry Popover */}
-                      {mounted && hoveredPopover === certaintyId && popoverCoords && typeof document !== "undefined" &&
-                        createPortal(
-                          <div
-                            style={{
-                              position: "fixed",
-                              top: popoverCoords.top,
-                              left: popoverCoords.left + popoverCoords.width / 2,
-                              transform: "translate(-50%, -100%)",
-                              marginTop: "-10px",
-                              zIndex: 9999,
-                            }}
-                            className="pointer-events-none"
-                          >
-                            <div className="w-64 p-3.5 bg-graphite-plate border border-zinc-800 rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-150 text-[10px] font-mono text-zinc-300">
-                              <div className="flex items-center justify-between border-b border-zinc-950/60 pb-1.5 mb-2 select-none">
-                                <span className="font-bold text-[9px] text-orange-500 uppercase tracking-widest">
-                                  Telemetry Diagnostics
-                                </span>
-                                <span
-                                  className={cn(
-                                    "text-[8px] font-bold px-1.5 py-0.5 rounded border leading-none uppercase tracking-wider",
-                                    isMintMatch
-                                      ? "border-emerald-500/20 bg-emerald-500/10 text-emerald-400"
-                                      : "border-orange-500/20 bg-orange-500/10 text-orange-400"
-                                  )}
-                                >
-                                  Certainty: {opp.score}%
-                                </span>
-                              </div>
-                              <div className="space-y-1.5">
-                                <p className="leading-relaxed font-sans font-light text-zinc-400">
-                                  {opp.reasoning}
-                                </p>
-                                <div className="pt-2 border-t border-zinc-950/20 flex justify-between items-center text-[8px] text-zinc-500 uppercase tracking-wider">
-                                  <span>INDEXED VIA ON-CHAIN DATA</span>
-                                  <span>VERIFIED</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>,
-                          document.body
-                        )
-                      }
+                      </MetricPopover>
                     </TableCell>
 
                     {/* APY */}
@@ -402,86 +301,73 @@ export function YieldMatrix({ opportunities, stateClassification }: YieldMatrixP
 
                     {/* ACTION */}
                     <TableCell className="py-3 text-right pr-4 relative">
-                      <div
-                        className="inline-block focus:outline-none"
-                        onMouseEnter={(e) => isSizeWarning && handleMouseEnter(e, mobilizeButtonId)}
-                        onMouseLeave={() => isSizeWarning && handleMouseLeave()}
-                        onFocus={(e) => isSizeWarning && handleMouseEnter(e, mobilizeButtonId)}
-                        onBlur={() => isSizeWarning && handleMouseLeave()}
-                        tabIndex={isSizeWarning ? 0 : -1}
-                        aria-haspopup={isSizeWarning ? "true" : "false"}
-                        aria-expanded={isSizeWarning ? hoveredPopover === mobilizeButtonId : undefined}
-                      >
-                        {opp.routeStatus === "verified" && opp.redirectUrl ? (
-                          <a
-                            href={opp.redirectUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={cn("inline-flex", isSizeWarning && "pointer-events-none")}
-                          >
+                      {isSizeWarning ? (
+                        <MetricPopover
+                          id={mobilizeButtonId}
+                          title="Size Telemetry Warning"
+                          badgeText="LOW SIZE"
+                          badgeVariant="warning"
+                          footerLeft="THRESHOLD"
+                          footerRight="$50.00 LIMIT"
+                          align="right"
+                          content={
+                            <p className="leading-relaxed font-sans font-light text-zinc-400 select-text">
+                              Yield routes are fully operational, but active deposit size is below the recommended $50 threshold. Solana transaction gas fees may exceed immediate yield accrual.
+                            </p>
+                          }
+                        >
+                          {opp.routeStatus === "verified" && opp.redirectUrl ? (
+                            <a
+                              href={opp.redirectUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex pointer-events-none"
+                            >
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled
+                                className="h-7 px-3 text-[9px] font-bold uppercase tracking-wider rounded-xl border-amber-950 bg-amber-950/10 text-amber-500 cursor-not-allowed border opacity-80 animate-none"
+                              >
+                                Mobilize
+                              </Button>
+                            </a>
+                          ) : (
                             <Button
                               variant="outline"
                               size="sm"
-                              disabled={isSizeWarning}
-                              className={cn(
-                                "h-7 px-3 text-[9px] font-bold uppercase tracking-wider rounded-xl transition-all duration-150 cursor-pointer animate-none",
-                                isSizeWarning
-                                  ? "border-amber-950 bg-amber-950/10 text-amber-500 cursor-not-allowed border opacity-80"
-                                  : "border-zinc-800 bg-graphite-plate hover:bg-zinc-900 hover:border-zinc-700 text-zinc-400 hover:text-zinc-100 active:opacity-80"
-                              )}
+                              disabled
+                              className="h-7 px-3 text-[9px] font-bold uppercase tracking-wider rounded-xl border border-zinc-900/60 bg-zinc-950/40 text-zinc-600 cursor-not-allowed select-none animate-none"
                             >
-                              Mobilize
+                              Unverified
                             </Button>
-                          </a>
-                        ) : (
+                          )}
+                        </MetricPopover>
+                      ) : opp.routeStatus === "verified" && opp.redirectUrl ? (
+                        <a
+                          href={opp.redirectUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex"
+                        >
                           <Button
                             variant="outline"
                             size="sm"
-                            disabled
-                            className="h-7 px-3 text-[9px] font-bold uppercase tracking-wider rounded-xl border border-zinc-900/60 bg-zinc-950/40 text-zinc-600 cursor-not-allowed select-none animate-none"
+                            className="h-7 px-3 text-[9px] font-bold uppercase tracking-wider rounded-xl border border-zinc-800 bg-graphite-plate hover:bg-zinc-900 hover:border-zinc-700 text-zinc-400 hover:text-zinc-100 active:opacity-80 transition-all duration-150 cursor-pointer animate-none"
                           >
-                            Unverified
+                            Mobilize
                           </Button>
-                        )}
-                      </div>
-
-                      {/* Size Warning HUD Popover */}
-                      {isSizeWarning && mounted && hoveredPopover === mobilizeButtonId && popoverCoords && typeof document !== "undefined" &&
-                        createPortal(
-                          <div
-                            style={{
-                              position: "fixed",
-                              top: popoverCoords.top,
-                              left: popoverCoords.left + popoverCoords.width,
-                              transform: "translate(-100%, -100%)",
-                              marginTop: "-10px",
-                              zIndex: 9999,
-                            }}
-                            className="pointer-events-none"
-                          >
-                            <div className="w-64 p-3.5 bg-graphite-plate border border-zinc-800 rounded-xl shadow-2xl animate-in fade-in slide-in-from-bottom-2 duration-150 text-[10px] font-mono text-zinc-300 text-left">
-                              <div className="flex items-center justify-between border-b border-zinc-950/60 pb-1.5 mb-2 select-none">
-                                <span className="font-bold text-[9px] text-amber-500 uppercase tracking-widest">
-                                  Size Telemetry Warning
-                                </span>
-                                <span className="text-[8px] font-bold px-1.5 py-0.5 rounded border border-amber-500/20 bg-amber-500/10 text-amber-400 leading-none uppercase tracking-wider">
-                                  LOW SIZE
-                                </span>
-                              </div>
-                              <div className="space-y-1.5">
-                                <p className="leading-relaxed font-sans font-light text-zinc-400">
-                                  Yield routes are fully operational, but active deposit size is below the recommended $50 threshold. Solana transaction gas fees may exceed immediate yield accrual.
-                                </p>
-                                <div className="pt-2 border-t border-zinc-950/20 flex justify-between items-center text-[8px] text-zinc-500 uppercase tracking-wider">
-                                  <span>THRESHOLD</span>
-                                  <span>$50.00 LIMIT</span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>,
-                          document.body
-                        )
-                      }
+                        </a>
+                      ) : (
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          disabled
+                          className="h-7 px-3 text-[9px] font-bold uppercase tracking-wider rounded-xl border border-zinc-900/60 bg-zinc-950/40 text-zinc-600 cursor-not-allowed select-none animate-none"
+                        >
+                          Unverified
+                        </Button>
+                      )}
                     </TableCell>
                   </TableRow>
                 );

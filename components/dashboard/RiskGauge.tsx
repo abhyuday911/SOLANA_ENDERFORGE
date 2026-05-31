@@ -2,6 +2,7 @@
 
 import { cn } from "@/lib/utils";
 import { AlertCircle, CheckCircle, ShieldAlert, Info } from "lucide-react";
+import { MetricPopover } from "@/components/ui/metric-popover";
 
 interface RiskGaugeProps {
   hhiScore: number;
@@ -19,61 +20,123 @@ export function RiskGauge({ hhiScore, tokenCount }: RiskGaugeProps) {
   const isCritical = !isEmpty && hhiScore <= 40;
 
   // Calculate how many of the 10 ticks should light up
-  const activeTicksCount = isEmpty 
-    ? 0 
+  const activeTicksCount = isEmpty
+    ? 0
     : Math.min(10, Math.max(0, Math.floor(hhiScore / 10)));
 
   // Calibrate state visual variables
   const stateColor = isEmpty
     ? "text-zinc-500"
-    : isHealthy 
-    ? "text-orange-500" 
-    : isWarning 
-    ? "text-amber-500" 
-    : "text-rose-500";
+    : isHealthy
+      ? "text-orange-500"
+      : isWarning
+        ? "text-amber-500"
+        : "text-rose-500";
 
   const stateBg = isEmpty
     ? "bg-zinc-800"
-    : isHealthy 
-    ? "bg-orange-500 shadow-[0_1px_2px_rgba(0,0,0,0.4)]" 
-    : isWarning 
-    ? "bg-amber-500 shadow-[0_1px_2px_rgba(0,0,0,0.4)]" 
-    : "bg-rose-500 shadow-[0_1px_2px_rgba(0,0,0,0.4)]";
+    : isHealthy
+      ? "bg-orange-500 shadow-[0_1px_2px_rgba(0,0,0,0.4)]"
+      : isWarning
+        ? "bg-amber-500 shadow-[0_1px_2px_rgba(0,0,0,0.4)]"
+        : "bg-rose-500 shadow-[0_1px_2px_rgba(0,0,0,0.4)]";
 
   const stateLabel = isEmpty
     ? "AWAITING_TELEMETRY"
-    : isHealthy 
-    ? "CALIBRATION_OPTIMAL" 
-    : isWarning 
-    ? "WARNING_CONCENTRATED" 
-    : "CRITICAL_EXPOSURE_HAZARD";
+    : isHealthy
+      ? "CALIBRATION_OPTIMAL"
+      : isWarning
+        ? "WARNING_CONCENTRATED"
+        : "CRITICAL_EXPOSURE_HAZARD";
 
   const stateIcon = isEmpty
     ? <Info className="size-3.5 text-zinc-500" />
-    : isHealthy 
-    ? <CheckCircle className="size-3.5 text-orange-500" />
-    : isWarning 
-    ? <AlertCircle className="size-3.5 text-amber-500" />
-    : <ShieldAlert className="size-3.5 text-rose-500" />;
+    : isHealthy
+      ? <CheckCircle className="size-3.5 text-orange-500" />
+      : isWarning
+        ? <AlertCircle className="size-3.5 text-amber-500" />
+        : <ShieldAlert className="size-3.5 text-rose-500" />;
 
   return (
     <div className="p-5 rounded-3xl bg-graphite-plate border-milled-bevel shadow-milled-elevated flex flex-col justify-between h-full space-y-5">
-      
+
       {/* Title Header */}
       <div className="flex justify-between items-start">
         <div className="space-y-0.5">
           <h3 className="text-[9px] font-bold text-zinc-500 uppercase tracking-[0.15em] font-mono">
             CONCENTRATION INDEX
           </h3>
-{tokenCount > 0 ? (
-  <p className="text-[10px] text-zinc-400 font-mono uppercase">
-    HHI Exposure Telemetry
-  </p>
-) : (
-  <p className="text-[10px] text-zinc-400 font-mono uppercase">
-    NO ASSETS – INDEX N/A
-  </p>
-)}
+          {!isEmpty ? (
+            <MetricPopover
+              id="hhi-gauge-popover"
+              title="HHI (Portfolio Concentration)"
+              badgeText={
+                hhiScore > 70
+                  ? "High Score"
+                  : hhiScore > 40
+                  ? "Medium Score"
+                  : "Low Score"
+              }
+              badgeVariant={
+                hhiScore > 70
+                  ? "success"
+                  : hhiScore > 40
+                  ? "warning"
+                  : "critical"
+              }
+              footerLeft="CALCULATED VIA ON-CHAIN DATA"
+              footerRight="REAL-TIME"
+              align="center"
+              position="bottom"
+              className="group"
+              content={
+                <div className="space-y-2 select-text">
+                  <p className="leading-relaxed font-sans font-light text-zinc-400">
+                    The HHI score measures your portfolio's concentration risk. Enderforge uses HHI to evaluate concentration risk and identify diversification opportunities.
+                  </p>
+
+                  {/* Mathematical Formula Telemetry Block */}
+                  <div className="bg-graphite-sunk border border-zinc-950/80 rounded-lg p-2 flex flex-col items-center justify-center space-y-1 font-mono text-[9px] select-none">
+                    <span className="text-zinc-500 font-bold text-[7px] uppercase tracking-widest">DETERMINISTIC RISK ENGINE</span>
+                    <span className="text-orange-500 font-black text-[11px] tracking-widest">HHI = Σ (s_i)²</span>
+                    <span className="text-zinc-500 text-[7.5px] text-center uppercase tracking-wider">s_i = % allocation of asset i</span>
+                  </div>
+
+                  <p className="leading-relaxed font-sans font-light text-zinc-400 text-[9.5px]">
+                    The raw index is normalized onto an intuitive <span className="font-mono text-[9px] px-1 py-0.5 rounded border border-zinc-800 bg-graphite-sunk text-zinc-300">1</span> to <span className="font-mono text-[9px] px-1 py-0.5 rounded border border-zinc-800 bg-graphite-sunk text-zinc-300">100</span> scale. Scores <span className="text-rose-400 font-semibold">&le; 40</span> trigger warning flags for assets exceeding 25% allocation.
+                  </p>
+
+                  <div className="pt-2 border-t border-zinc-950/20 space-y-1 text-[8px] uppercase tracking-wider text-zinc-400 font-mono select-none">
+                    <div className="flex justify-between text-zinc-500 font-bold mb-0.5">
+                      <span>STATUS GUIDE</span>
+                      <span>CONCENTRATION</span>
+                    </div>
+                    <div className="flex justify-between text-emerald-400">
+                      <span>HIGH SCORE (&gt;70)</span>
+                      <span>WELL DIVERSIFIED</span>
+                    </div>
+                    <div className="flex justify-between text-amber-500">
+                      <span>MEDIUM SCORE (41-70)</span>
+                      <span>MODERATELY CONCENTRATED</span>
+                    </div>
+                    <div className="flex justify-between text-rose-500">
+                      <span>LOW SCORE (&le;40)</span>
+                      <span>HIGHLY CONCENTRATED</span>
+                    </div>
+                  </div>
+                </div>
+              }
+            >
+              <span className="text-[10px] text-zinc-400 font-mono uppercase group-hover:text-zinc-200 group-focus:text-zinc-200 transition-colors select-none">
+                HHI Exposure Telemetry
+              </span>
+              <Info className="size-3.5 ml-1.5 text-zinc-400 group-hover:text-zinc-200 group-focus:text-zinc-200 transition-colors flex-shrink-0" />
+            </MetricPopover>
+          ) : (
+            <p className="text-[10px] text-zinc-400 font-mono uppercase select-none">
+              NO ASSETS – INDEX N/A
+            </p>
+          )}
         </div>
         <div className="text-right font-mono">
           <span className="text-3xl font-black text-zinc-100 tracking-tighter">
@@ -99,7 +162,7 @@ export function RiskGauge({ hhiScore, tokenCount }: RiskGaugeProps) {
             );
           })}
         </div>
-        
+
         {/* Caliper Telemetry Labels */}
         <div className="flex justify-between text-[8px] text-zinc-500 font-mono tracking-widest px-1 uppercase">
           <span>0.00 (HAZARD)</span>
@@ -116,15 +179,15 @@ export function RiskGauge({ hhiScore, tokenCount }: RiskGaugeProps) {
             {stateLabel}
           </span>
         </div>
-        
+
         <p className="text-[10px] text-zinc-400 leading-relaxed font-sans font-light max-w-xs text-left">
           {isEmpty
             ? "Connect a wallet with assets or populate holdings to initiate automated HHI index assessment and safety calibrations."
-            : isHealthy 
-            ? "Capital spread indicates balanced single-point safety threshold. Exposure risks isolated." 
-            : isWarning 
-            ? "Asset concentration warning. Restructuring capital into alternative yield channels advised." 
-            : "High volatility exposure. Concentrated asset load requires urgent risk optimization routing."}
+            : isHealthy
+              ? "Capital spread indicates balanced single-point safety threshold. Exposure risks isolated."
+              : isWarning
+                ? "Asset concentration warning. Restructuring capital into alternative yield channels advised."
+                : "High volatility exposure. Concentrated asset load requires urgent risk optimization routing."}
         </p>
       </div>
 
