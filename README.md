@@ -15,21 +15,13 @@
 
 ENDERFORGE represents an industrial-grade portfolio risk calibrator and real-time yield optimizer built using the **Enderforge Design System** specifications for the Solana network. We combine rigorous economic risk models (Herfindahl-Hirschman Index concentration audits) with real-time DeFi telemetry arrays and ultra-low-latency LPU AI synthesis.
 
-[**Explore the Dashboard**](https://enderforge.abhyuday.dev/) • [**Review the Architecture**](#-architecture--data-funnel) • [**Run Local Telemetry**](#-installation--local-deployment)
+[**Explore the Dashboard**](https://enderforge.abhyuday.dev/) • [**Review the Architecture**](#architecture-and-data-funnel) • [**Run Local Telemetry**](#installation-and-local-deployment)
 
 </div>
 
-
-> [!IMPORTANT]
-> **Product Scope Notice (Active R&D):**
-> ENDERFORGE currently operates as a high-fidelity **read-only portfolio risk analyzer** (calibrating localized HHI diversification metrics, Helius asset indexing, and price feed integration). 
-> 
-> *   **AI Yield Suggestions** are currently being integrated and refined under active calibration.
-> *   **One-Click Yielding** (direct execution of capital routing to vaults) is in active R&D and not yet executable directly from the platform shell.
-
 ---
 
-## ⚠️ The "Lazy Capital" Problem
+## The Lazy Capital Problem
 
 > "Solana users lose millions in potential yield annually because monitoring 50+ vaults is a full-time job. ENDERFORGE paves the way for turning your wallet from a static storage unit into an automated alpha machine."
 
@@ -37,15 +29,15 @@ DeFi operators face a double-edged sword: **idle capital bleeding opportunity co
 
 ---
 
-## 🎬 Product Demonstration
+## Product Demonstration
 
 Check out our production interface and rapid synchronization flow in action:
 
-[![ENDERFORGE: The Future of Solana Yield](https://img.placeholder.com/800x450?text=Click+to+Watch+Enderforge+Demo)](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
+https://github.com/user-attachments/assets/6f25d374-d568-4f74-b5d6-7f2c9b94911f
 
 ---
 
-## ⚡ Engineered for 2026 (The Technical Flex)
+## Engineered for 2026 (The Technical Flex)
 
 To stand out in the Solana Global Hackathon, we bypassed legacy React configurations, bloated Web3 bundles, and slow UI render loops. ENDERFORGE is engineered around three bleeding-edge core technical pillars:
 
@@ -65,7 +57,7 @@ A major vulnerability in modern DeFi dApps is "ghost data"—stale wallet states
 
 ---
 
-## 📊 The "Roadmap" Matrix (MVP vs. Vision)
+## The Roadmap Matrix (MVP vs. Vision)
 
 | Feature | Description | Status |
 | :--- | :--- | :--- |
@@ -77,7 +69,7 @@ A major vulnerability in modern DeFi dApps is "ghost data"—stale wallet states
 
 ---
 
-## 🛠️ Architecture & Data Funnel
+## Architecture and Data Funnel
 
 ENDERFORGE utilizes a high-efficiency unidirectional data pipeline. Real-time chain state is indexed, scored, enriched, and synthesized before rendering in the **Enderforge UI Dashboard Shell**:
 
@@ -99,7 +91,7 @@ graph LR
 
 ---
 
-## 🛡️ Deterministic Risk Engine: Herfindahl-Hirschman Index (HHI)
+## Deterministic Risk Engine: Herfindahl-Hirschman Index (HHI)
 
 ENDERFORGE goes beyond basic "pie charts." We run a localized **Herfindahl-Hirschman Index (HHI)** calculation to assess structural concentration risk mathematically:
 
@@ -112,7 +104,7 @@ Where $s_i$ is the percentage allocation of asset $i$ in the portfolio.
 
 ---
 
-## 📐 The Enderforge Design Language
+## The Enderforge Design Language
 
 ENDERFORGE is styled in strict accordance with the **Enderforge Design System**—representing a tactile, instrument-grade command deck styled for industrial aerospace telemetry:
 
@@ -122,7 +114,7 @@ ENDERFORGE is styled in strict accordance with the **Enderforge Design System**�
 
 ---
 
-## ⚙️ Installation & Local Deployment
+## Installation and Local Deployment
 
 ### 1. Prerequisites
 Ensure you have the [Bun runtime](https://bun.sh) (v1.x) installed on your system.
