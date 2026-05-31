@@ -43,20 +43,20 @@ export function TokenHoldingsTable({ holdings }: TokenHoldingsTableProps) {
           <TableBody>
             {holdings.map((token) => {
               const isOverAllocated = token.allocationPct > 25;
-              
+
               return (
-                <TableRow 
-                  key={`${token.mint}+${token.name}`} 
+                <TableRow
+                  key={`${token.mint}+${token.name}`}
                   className="border-zinc-950/40 hover:bg-graphite-sunk/30 transition-colors duration-200 group"
                 >
                   {/* Asset Info */}
                   <TableCell className="py-3">
                     <div className="flex items-center gap-3">
                       {token.logoUri ? (
-                        <img 
-                          src={token.logoUri} 
-                          alt={token.symbol} 
-                          className="size-5 rounded-full filter brightness-95 border border-zinc-950/60 bg-zinc-950" 
+                        <img
+                          src={token.logoUri}
+                          alt={token.symbol}
+                          className="size-5 rounded-full filter brightness-95 border border-zinc-950/60 bg-zinc-950"
                         />
                       ) : (
                         <div className="size-5 rounded-full bg-graphite-sunk border border-zinc-950 flex items-center justify-center text-[8px] font-mono font-bold text-zinc-500">
@@ -94,22 +94,22 @@ export function TokenHoldingsTable({ holdings }: TokenHoldingsTableProps) {
                     <div className="flex items-center justify-end gap-3 select-none">
                       {/* Low-profile mini progress bar indicator */}
                       <div className="w-14 h-1 overflow-hidden rounded-full bg-graphite-sunk border border-zinc-950 shadow-milled-sunk hidden sm:block">
-                        <div 
+                        <div
                           className={cn(
                             "h-full transition-all duration-500",
-                            isOverAllocated 
-                              ? "bg-rose-500" 
+                            isOverAllocated
+                              ? "bg-rose-500"
                               : "bg-orange-500"
-                          )} 
+                          )}
                           style={{ width: `${token.allocationPct}%` }}
                         />
                       </div>
-                      <Badge 
-                        variant="outline" 
+                      <Badge
+                        variant="outline"
                         className={cn(
                           "h-5 px-2 text-[9px] font-mono font-bold tracking-wider rounded-lg border",
-                          isOverAllocated 
-                            ? "border-rose-950/60 bg-rose-950/15 text-rose-400" 
+                          isOverAllocated
+                            ? "border-rose-950/60 bg-rose-950/15 text-rose-400"
                             : "border-zinc-900 bg-graphite-sunk/60 text-zinc-400"
                         )}
                       >
@@ -123,7 +123,7 @@ export function TokenHoldingsTable({ holdings }: TokenHoldingsTableProps) {
           </TableBody>
         </Table>
       </div>
-      
+
       {/* Table Footer Telemetry Tag */}
       <div className="p-2.5 bg-graphite-sunk border-t border-zinc-950/40 flex items-center justify-between text-[8px] font-mono text-zinc-600 select-none uppercase tracking-wider">
         <span>ASSET_REGISTER: ACTIVE_ON_CHAIN_DASH</span>

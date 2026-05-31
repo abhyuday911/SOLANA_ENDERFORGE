@@ -412,26 +412,37 @@ export function YieldMatrix({ opportunities, stateClassification }: YieldMatrixP
                         aria-haspopup={isSizeWarning ? "true" : "false"}
                         aria-expanded={isSizeWarning ? hoveredPopover === mobilizeButtonId : undefined}
                       >
-                        <a
-                          href={opp.redirectUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className={cn("inline-flex", isSizeWarning && "pointer-events-none")}
-                        >
+                        {opp.routeStatus === "verified" && opp.redirectUrl ? (
+                          <a
+                            href={opp.redirectUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={cn("inline-flex", isSizeWarning && "pointer-events-none")}
+                          >
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={isSizeWarning}
+                              className={cn(
+                                "h-7 px-3 text-[9px] font-bold uppercase tracking-wider rounded-xl transition-all duration-150 cursor-pointer animate-none",
+                                isSizeWarning
+                                  ? "border-amber-950 bg-amber-950/10 text-amber-500 cursor-not-allowed border opacity-80"
+                                  : "border-zinc-800 bg-graphite-plate hover:bg-zinc-900 hover:border-zinc-700 text-zinc-400 hover:text-zinc-100 active:opacity-80"
+                              )}
+                            >
+                              Mobilize
+                            </Button>
+                          </a>
+                        ) : (
                           <Button
                             variant="outline"
                             size="sm"
-                            disabled={isSizeWarning}
-                            className={cn(
-                              "h-7 px-3 text-[9px] font-bold uppercase tracking-wider rounded-xl transition-all duration-150 cursor-pointer animate-none",
-                              isSizeWarning
-                                ? "border-amber-950 bg-amber-950/10 text-amber-500 cursor-not-allowed border opacity-80"
-                                : "border-zinc-800 bg-graphite-plate hover:bg-zinc-900 hover:border-zinc-700 text-zinc-400 hover:text-zinc-100 active:opacity-80"
-                            )}
+                            disabled
+                            className="h-7 px-3 text-[9px] font-bold uppercase tracking-wider rounded-xl border border-zinc-900/60 bg-zinc-950/40 text-zinc-600 cursor-not-allowed select-none animate-none"
                           >
-                            Mobilize
+                            Unverified
                           </Button>
-                        </a>
+                        )}
                       </div>
 
                       {/* Size Warning HUD Popover */}

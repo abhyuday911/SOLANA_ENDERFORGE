@@ -41,7 +41,8 @@ export interface EnrichedRoute {
   poolName: string;
   protocolName: string;
   apy: number;
-  redirectUrl: string;
+  routeStatus: "verified" | "unverified";
+  redirectUrl?: string;
   score: number;
   reasoning: string;
 }
@@ -199,6 +200,7 @@ export async function matchYieldOpportunities(
             poolName: pool.symbol,
             protocolName: metadata.displayName,
             apy: apyTotal,
+            routeStatus: metadata.status,
             redirectUrl: metadata.officialUrl,
             score: matchedScore,
             reasoning: matchReason,

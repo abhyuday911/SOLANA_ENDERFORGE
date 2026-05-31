@@ -1,38 +1,71 @@
+export type ProtocolStatus = "verified" | "unverified";
+
 export interface ProtocolMetadata {
   slug: string;
   displayName: string;
-  officialUrl: string;
+  status: ProtocolStatus;
+  officialUrl?: string;
 }
 
 export const PROTOCOL_REGISTRY: Record<string, ProtocolMetadata> = {
-  "kamino-lend": {
-    slug: "kamino-lend",
+  "kamino": {
+    slug: "kamino",
     displayName: "Kamino",
-    officialUrl: "https://app.kamino.finance",
-  },
-  "kamino-liquidity": {
-    slug: "kamino-liquidity",
-    displayName: "Kamino Liquidity",
+    status: "verified",
     officialUrl: "https://app.kamino.finance",
   },
   "drift": {
     slug: "drift",
     displayName: "Drift",
+    status: "verified",
     officialUrl: "https://app.drift.trade",
   },
   "marginfi": {
     slug: "marginfi",
     displayName: "MarginFi",
+    status: "verified",
     officialUrl: "https://app.marginfi.com",
   },
   "save": {
     slug: "save",
     displayName: "Save",
+    status: "verified",
     officialUrl: "https://save.finance",
   },
-  "orca-dex": {
-    slug: "orca-dex",
+  "jito": {
+    slug: "jito",
+    displayName: "Jito",
+    status: "verified",
+    officialUrl: "https://www.jito.network",
+  },
+  "meteora": {
+    slug: "meteora",
+    displayName: "Meteora",
+    status: "verified",
+    officialUrl: "https://app.meteora.ag",
+  },
+  "sanctum": {
+    slug: "sanctum",
+    displayName: "Sanctum",
+    status: "verified",
+    officialUrl: "https://app.sanctum.so",
+  },
+  "marinade": {
+    slug: "marinade",
+    displayName: "Marinade",
+    status: "verified",
+    officialUrl: "https://marinade.finance",
+  },
+  "solend": {
+    slug: "solend",
+    displayName: "Solend",
+    status: "verified",
+    officialUrl: "https://solend.fi",
+  },
+  "orca": {
+    slug: "orca",
     displayName: "Orca",
+    status: "verified",
     officialUrl: "https://orca.so",
   },
 };
@@ -42,8 +75,21 @@ export const PROTOCOL_REGISTRY: Record<string, ProtocolMetadata> = {
  */
 export function getProtocolMetadata(slug: string): ProtocolMetadata {
   const normalizedSlug = slug.toLowerCase();
-  const registered = PROTOCOL_REGISTRY[normalizedSlug];
-  if (registered) return registered;
+
+  // Try exact match first
+  if (PROTOCOL_REGISTRY[normalizedSlug]) {
+    return PROTOCOL_REGISTRY[normalizedSlug];
+  }
+
+  // Try prefix matching (e.g., "kamino-lend" matches "kamino", "orca-dex" matches "orca")
+  for (const key of Object.keys(PROTOCOL_REGISTRY)) {
+    if (normalizedSlug.startsWith(key) || key.startsWith(normalizedSlug)) {
+      return {
+        ...PROTOCOL_REGISTRY[key],
+        slug, // keep original slug
+      };
+    }
+  }
 
   // Fallback for unregistered dynamic slugs
   const formattedName = slug
@@ -54,6 +100,7 @@ export function getProtocolMetadata(slug: string): ProtocolMetadata {
   return {
     slug,
     displayName: formattedName,
-    officialUrl: "https://solana.com", // Safe default
+    status: "unverified",
+    // officialUrl is left undefined
   };
 }
