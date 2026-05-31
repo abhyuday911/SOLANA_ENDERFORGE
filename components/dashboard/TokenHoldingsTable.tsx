@@ -107,7 +107,7 @@ export function TokenHoldingsTable({ holdings }: TokenHoldingsTableProps) {
                       <Badge
                         variant="outline"
                         className={cn(
-                          "h-5 px-2 text-[9px] font-mono font-bold tracking-wider rounded-lg border",
+                          "h-5 px-2 text-[9px] w-12 font-mono font-bold tracking-wider rounded-lg border",
                           isOverAllocated
                             ? "border-rose-950/60 bg-rose-950/15 text-rose-400"
                             : "border-zinc-900 bg-graphite-sunk/60 text-zinc-400"
