@@ -91,6 +91,10 @@ export interface AnalysisResult {
   yieldMatches: YieldMatch[];
   aiSummary: string;
   timestamp: number;
+  aiError?: {
+    code: string;
+    message: string;
+  };
 }
 
 export interface AnalysisError {
@@ -249,13 +253,15 @@ async function synthesizeWithAI(
   riskReport: RiskReport,
   yieldMatches: YieldMatch[],
   groq: Groq
-): Promise<string> {
+): Promise<{ text: string; error?: { code: string; message: string } }> {
   if (holdings.length === 0) {
-    return `Your wallet appears to be empty – no assets were detected.
+    return {
+      text: `Your wallet appears to be empty – no assets were detected.
 
 There are no concentration risks or yield opportunities to analyze at this time.
 
-To get a meaningful analysis, please deposit some SOL or SPL tokens into your wallet and refresh the dashboard.`;
+To get a meaningful analysis, please deposit some SOL or SPL tokens into your wallet and refresh the dashboard.`
+    };
   }
 
   const top20 = [...holdings]
@@ -304,7 +310,6 @@ IMPORTANT:
 - Use a professional yet encouraging tone.
 - Ensure the assessment is data-driven.`;
 
-
   try {
     const completion = await groq.chat.completions.create({
       messages: [
@@ -319,13 +324,41 @@ IMPORTANT:
       max_tokens: 1024,
     });
 
-    return (
-      completion.choices[0]?.message?.content ??
-      "Unable to generate AI summary at this time."
-    );
+    return {
+      text: completion.choices[0]?.message?.content ?? "Unable to generate AI summary at this time."
+    };
   } catch (err) {
     console.error("[groq] AI synthesis failed:", err);
-    return "AI synthesis unavailable at this moment.";
+    const errString = String(err);
+    const isRateLimit = (err as any).status === 429 || 
+                        errString.includes("429") || 
+                        errString.includes("rate_limit_exceeded") || 
+                        errString.includes("Limit 100000") ||
+                        errString.includes("billing");
+
+    if (isRateLimit) {
+      return {
+        text: `⚠️ **AI Credits Exceeded / Rate Limit Reached**
+
+Enderforge is currently experiencing extremely high volume, or our Groq AI API credits/limits have been temporarily exceeded. 
+
+Your technical risk telemetry, concentration analysis, and active yield matching matrices are fully loaded and operational below. 
+
+*Please try again in after 24 hours once the token allocation window resets.*`,
+        error: {
+          code: "AI_RATE_LIMIT",
+          message: "Groq AI API credits exceeded / rate limit reached."
+        }
+      };
+    }
+
+    return {
+      text: "AI synthesis is temporarily unavailable. Please try again later.",
+      error: {
+        code: "AI_ERROR",
+        message: err instanceof Error ? err.message : "Unexpected error during AI synthesis"
+      }
+    };
   }
 }
 
@@ -392,7 +425,7 @@ export async function analyzePortfolio(
         ? await matchYieldOpportunities(riskReport.idleCapital)
         : [];
 
-    const aiSummary = await synthesizeWithAI(
+    const aiResult = await synthesizeWithAI(
       holdings,
       riskReport,
       yieldMatches,
@@ -405,7 +438,8 @@ export async function analyzePortfolio(
         holdings,
         riskReport,
         yieldMatches,
-        aiSummary,
+        aiSummary: aiResult.text,
+        aiError: aiResult.error,
         timestamp: Date.now(),
       },
     };

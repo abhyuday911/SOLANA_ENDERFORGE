@@ -28,9 +28,22 @@ export default function DashboardPage() {
   const [isPending, startTransition] = useTransition();
   const [data, setData] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [toast, setToast] = useState<{ message: string; type: "warning" | "error" | "info" } | null>(null);
 
   // Track current request to prevent race conditions
   const analysisRequestId = useRef(0);
+
+  // Trigger toast on AI limitations
+  useEffect(() => {
+    if (data?.aiError) {
+      setToast({
+        message: "AI credits limit reached. Standard risk metrics are fully operational.",
+        type: "warning",
+      });
+      const timer = setTimeout(() => setToast(null), 8000);
+      return () => clearTimeout(timer);
+    }
+  }, [data]);
 
   const performAnalysis = async (targetCluster = cluster, targetWallet = publicKey) => {
     if (!targetWallet) return;
@@ -104,16 +117,18 @@ export default function DashboardPage() {
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-950 pb-8">
           <div className="space-y-1.5">
             <h2 className="text-lg font-extrabold text-zinc-100 tracking-wider flex items-center gap-3">
-              <div className="flex items-center gap-3">
-                <Link
-                  href="/"
-                  aria-label="Go to home"
-                  className="bg-gradient-to-tr from-orange-500 to-amber-500 p-1.5 rounded-lg shadow-sm inline-flex"
-                >
+              <Link
+                href="/"
+                aria-label="Go to home"
+                className="flex items-center gap-3"
+              >
+                <div className="bg-gradient-to-tr from-orange-500 to-amber-500 p-1.5 rounded-lg shadow-sm inline-flex">
                   <Gavel className="size-4 text-zinc-950 fill-zinc-950" />
-                </Link>
-                <span className="uppercase text-sm tracking-[0.25em] font-black">ENDERFORGE</span>
-              </div>
+                </div>
+                <span className="uppercase text-sm tracking-[0.25em] font-black">
+                  ENDERFORGE
+                </span>
+              </Link>
               <div className="bg-graphite-sunk border border-zinc-950 shadow-milled-sunk p-0.5 rounded-xl flex items-center gap-0.5 ml-3">
                 <button
                   onClick={() => {
@@ -250,6 +265,29 @@ export default function DashboardPage() {
           </div>
         ) : null}
       </div>
+
+      {/* Toast Notification HUD */}
+      {toast && (
+        <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-5 duration-350">
+          <div className="bg-graphite-plate border border-amber-500/20 text-amber-200 px-4 py-3.5 rounded-2xl shadow-2xl backdrop-blur-xl flex items-center gap-3.5 max-w-sm border-milled-bevel">
+            <Sparkles className="size-4 text-orange-500 animate-pulse shrink-0 animate-duration-1000" />
+            <div className="space-y-0.5">
+              <p className="text-[10px] font-bold font-mono tracking-wider uppercase text-orange-500">
+                AI Telemetry Notice
+              </p>
+              <p className="text-[10px] leading-relaxed text-zinc-300 font-sans font-light">
+                {toast.message}
+              </p>
+            </div>
+            <button
+              onClick={() => setToast(null)}
+              className="text-zinc-500 hover:text-zinc-300 ml-auto cursor-pointer font-bold text-xs select-none h-6 w-6 flex items-center justify-center rounded-lg hover:bg-zinc-950/20"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
