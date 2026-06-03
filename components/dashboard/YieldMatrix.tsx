@@ -353,7 +353,7 @@ export function YieldMatrix({ opportunities, stateClassification }: YieldMatrixP
                     </TableCell>
 
                     {/* ACTION */}
-                    <TableCell className="py-3 text-right pr-4 relative">
+                    <TableCell className="py-3 text-right relative">
                       {isSizeWarning ? (
                         <MetricPopover
                           id={mobilizeButtonId}
@@ -390,7 +390,7 @@ export function YieldMatrix({ opportunities, stateClassification }: YieldMatrixP
                               variant="outline"
                               size="sm"
                               disabled
-                              className="h-7 px-3 text-[9px] font-bold uppercase tracking-wider rounded-xl border border-zinc-900/60 bg-zinc-950/40 text-zinc-600 cursor-not-allowed select-none animate-none"
+                              className="h-7 px-3 text-[9px] font-bold uppercase tracking-wider rounded-xl border border-zinc-700/50 bg-zinc-800/30 text-zinc-400 cursor-not-allowed select-none animate-none"
                             >
                               Unverified
                             </Button>
