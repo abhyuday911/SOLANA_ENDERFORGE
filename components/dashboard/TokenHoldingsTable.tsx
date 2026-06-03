@@ -19,7 +19,7 @@ interface TokenHoldingsTableProps {
 export function TokenHoldingsTable({ holdings }: TokenHoldingsTableProps) {
   return (
     <div className="rounded-3xl border-milled-bevel bg-graphite-plate shadow-milled-elevated overflow-hidden">
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto scrollbar-hide">
         <Table>
           <TableHeader className="bg-graphite-plate border-b border-zinc-950/40">
             <TableRow className="hover:bg-transparent border-zinc-950/40 select-none">
