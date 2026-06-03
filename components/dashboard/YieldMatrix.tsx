@@ -110,7 +110,7 @@ export function YieldMatrix({ opportunities, stateClassification }: YieldMatrixP
       </div>
 
       {/* Recessed Ledger Table Container */}
-      <div className="overflow-y-auto pr-1 flex-1 w-full max-h-[175px]">
+      <div className="overflow-y-auto scrollbar-hide pr-1 flex-1 w-full max-h-[175px]">
         <Table>
           <TableHeader className="bg-graphite-plate border-b border-zinc-950/40 sticky top-0 z-10 select-none">
             <TableRow className="hover:bg-transparent border-zinc-950/40">
@@ -169,12 +169,12 @@ export function YieldMatrix({ opportunities, stateClassification }: YieldMatrixP
                     </TableCell>
 
                     {/* PROTOCOL & VAULT STATUS NOTICE */}
-                    <TableCell className="py-3 pl-4 text-xs font-bold text-zinc-400 font-mono" colSpan={2}>
+                    <TableCell className="py-3 pl-4 text-xs font-bold text-zinc-400 font-mono" colSpan={1}>
                       {isOffline ? "INDEX TELEMETRY DOWN" : "NO ACTIVE VAULTS"}
                     </TableCell>
 
                     {/* CLASSIFICATION BADGE WITH PREMIUM POPOVER */}
-                    <TableCell className="py-3 relative" colSpan={2}>
+                    <TableCell className="py-3 relative text-center" colSpan={3}>
                       <MetricPopover
                         id={statusId}
                         title="Status Diagnostics"
@@ -226,7 +226,7 @@ export function YieldMatrix({ opportunities, stateClassification }: YieldMatrixP
                 const riskBadgeClass =
                   opp.riskTier === "HIGH" ? "border-rose-950/60 bg-rose-950/15 text-rose-400" :
                   opp.riskTier === "MEDIUM" ? "border-amber-950/60 bg-amber-950/15 text-amber-400" :
-                  "border-emerald-950/60 bg-emerald-950/15 text-emerald-400";
+                  "border-emerald-900/50 bg-emerald-900/20 text-emerald-400";
 
                 return (
                   <TableRow
@@ -312,7 +312,7 @@ export function YieldMatrix({ opportunities, stateClassification }: YieldMatrixP
                             className={cn(
                               "h-5 px-2 text-[9px] font-mono font-bold tracking-wider rounded-lg border cursor-help select-none transition-colors duration-150 animate-none",
                               isMintMatch
-                                ? "border-emerald-950/60 bg-emerald-950/15 text-emerald-400"
+                                ? "border-emerald-900/50 bg-emerald-900/20 text-emerald-400"
                                 : "border-orange-950/60 bg-orange-950/15 text-orange-400"
                             )}
                           >
