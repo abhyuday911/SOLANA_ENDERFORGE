@@ -215,6 +215,19 @@ export function YieldMatrix({ opportunities, stateClassification }: YieldMatrixP
                 const certaintyId = `certainty-${opp.poolId}-${idx}`;
                 const mobilizeButtonId = `mobilize-${opp.poolId}-${idx}`;
 
+                // APY warning tier colors
+                const apyColorClass = 
+                  opp.apyWarningTier === "EXTREME" ? "text-rose-400" :
+                  opp.apyWarningTier === "HIGH" ? "text-orange-400" :
+                  opp.apyWarningTier === "ELEVATED" ? "text-amber-400" :
+                  "text-emerald-400";
+
+                // Risk tier badge styling
+                const riskBadgeClass =
+                  opp.riskTier === "HIGH" ? "border-rose-950/60 bg-rose-950/15 text-rose-400" :
+                  opp.riskTier === "MEDIUM" ? "border-amber-950/60 bg-amber-950/15 text-amber-400" :
+                  "border-emerald-950/60 bg-emerald-950/15 text-emerald-400";
+
                 return (
                   <TableRow
                     key={opp.poolId}
@@ -266,37 +279,77 @@ export function YieldMatrix({ opportunities, stateClassification }: YieldMatrixP
                     <TableCell className="py-3 relative">
                       <MetricPopover
                         id={certaintyId}
-                        title="Telemetry Diagnostics"
-                        badgeText={`Certainty: ${opp.score}%`}
-                        badgeVariant={isMintMatch ? "success" : "warning"}
-                        footerLeft="INDEXED VIA ON-CHAIN DATA"
-                        footerRight="VERIFIED"
+                        title="Risk Assessment"
+                        badgeText={`Risk: ${opp.riskTier}`}
+                        badgeVariant={opp.riskTier === "LOW" ? "success" : opp.riskTier === "MEDIUM" ? "warning" : "critical"}
+                        footerLeft={`SCORE: ${opp.finalScore}`}
+                        footerRight={opp.exposureType === "LP" ? "LP POSITION" : "SINGLE ASSET"}
                         align="center"
                         content={
-                          <p className="leading-relaxed font-sans font-light text-zinc-400 select-text">
-                            {opp.reasoning}
-                          </p>
+                          <div className="space-y-2">
+                            <p className="leading-relaxed font-sans font-light text-zinc-400 select-text">
+                              {opp.reasoning}
+                            </p>
+                            <div className="grid grid-cols-2 gap-1 text-[9px] font-mono text-zinc-500">
+                              <span>Risk Score: <span className="text-zinc-300">{opp.riskScore}</span></span>
+                              <span>Sustainability: <span className="text-zinc-300">{opp.sustainabilityScore}</span></span>
+                              <span>Liquidity: <span className="text-zinc-300">{opp.liquidityScore}</span></span>
+                              <span>Composite: <span className="text-zinc-300">{opp.compositeScore}</span></span>
+                              <span>Base APY: <span className="text-zinc-300">{opp.apyBase.toFixed(1)}%</span></span>
+                              <span>Reward APY: <span className="text-zinc-300">{opp.apyReward.toFixed(1)}%</span></span>
+                            </div>
+                            {opp.exposureType === "LP" && (
+                              <p className="text-[9px] font-mono text-amber-500/80 mt-1">
+                                ⚠ LP position — impermanent loss risk applies
+                              </p>
+                            )}
+                          </div>
                         }
                       >
-                        <Badge
-                          variant="outline"
-                          className={cn(
-                            "h-5 px-2 text-[9px] font-mono font-bold tracking-wider rounded-lg border cursor-help select-none transition-colors duration-150 animate-none",
-                            isMintMatch
-                              ? "border-emerald-950/60 bg-emerald-950/15 text-emerald-400"
-                              : "border-orange-950/60 bg-orange-950/15 text-orange-400"
-                          )}
-                        >
-                          {isMintMatch ? "MINT MATCH" : "SYMBOL MATCH"}
-                        </Badge>
+                        <div className="flex items-center gap-1">
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "h-5 px-2 text-[9px] font-mono font-bold tracking-wider rounded-lg border cursor-help select-none transition-colors duration-150 animate-none",
+                              isMintMatch
+                                ? "border-emerald-950/60 bg-emerald-950/15 text-emerald-400"
+                                : "border-orange-950/60 bg-orange-950/15 text-orange-400"
+                            )}
+                          >
+                            {isMintMatch ? "MINT" : "SYMBOL"}
+                          </Badge>
+                          <Badge
+                            variant="outline"
+                            className={cn(
+                              "h-5 px-1.5 text-[8px] font-mono font-bold tracking-wider rounded-lg border cursor-help select-none transition-colors duration-150 animate-none",
+                              riskBadgeClass
+                            )}
+                          >
+                            {opp.riskTier}
+                          </Badge>
+                        </div>
                       </MetricPopover>
                     </TableCell>
 
                     {/* APY */}
                     <TableCell className="py-3 font-mono">
-                      <span className="text-sm font-extrabold text-emerald-400 tracking-tight animate-none">
-                        {opp.apy.toFixed(2)}%
-                      </span>
+                      <div className="flex flex-col">
+                        <span className={cn("text-sm font-extrabold tracking-tight animate-none", apyColorClass)}>
+                          {opp.apy.toFixed(2)}%
+                        </span>
+                        {opp.apyWarningTier !== "NORMAL" && (
+                          <span className={cn(
+                            "text-[8px] font-mono font-bold tracking-wider mt-0.5",
+                            opp.apyWarningTier === "EXTREME" ? "text-rose-500/70" :
+                            opp.apyWarningTier === "HIGH" ? "text-orange-500/70" :
+                            "text-amber-500/70"
+                          )}>
+                            {opp.apyWarningTier === "EXTREME" ? "LIKELY TEMPORARY" :
+                             opp.apyWarningTier === "HIGH" ? "VOLATILE" :
+                             "ELEVATED"}
+                          </span>
+                        )}
+                      </div>
                     </TableCell>
 
                     {/* ACTION */}
