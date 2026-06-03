@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import dynamic from "next/dynamic";
 import { Button } from "@/components/ui/button";
-import { Sparkles, ArrowRight, ShieldCheck, Zap, Activity, Gavel } from "lucide-react";
+import { Sparkles, ArrowRight, ShieldCheck, Zap, Activity } from "lucide-react";
 import Link from "next/link";
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
@@ -136,17 +136,19 @@ export function HeroSection() {
       {/* Grid Pattern Ambient Overlay */}
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#1f293706_1px,transparent_1px),linear-gradient(to_bottom,#1f293708_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)] z-0 pointer-events-none opacity-5" />
 
-      {/* Header HUD Navigation (Enderforge Machined Nav) */}
       <header className="absolute top-0 left-0 right-0 px-6 py-6 flex items-center justify-between max-w-7xl mx-auto w-full border-b border-zinc-900/30 backdrop-blur-md z-30">
         <div className="flex items-center gap-3 font-extrabold text-base tracking-[0.2em] text-zinc-100">
           <Link
             href="/"
             aria-label="Go to home"
-            className="bg-gradient-to-tr from-orange-500 to-amber-500 p-1.5 rounded-sm shadow-lg shadow-orange-500/10 inline-flex rounded-sm"
+            className="flex items-center gap-2.5"
           >
-            <Gavel className="size-5 text-zinc-950 fill-zinc-950" />
+            <img src="/ELDERFORGE.png" alt="Enderforge Logo" className="size-8 object-contain" />
+            <span className="uppercase tracking-[0.25em] font-black text-xs sm:text-sm">
+              <span className="text-zinc-400">ENDER</span>
+              <span className="text-orange-500">FORGE</span>
+            </span>
           </Link>
-          ENDERFORGE
         </div>
 
         <div className="flex items-center gap-4">

@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import dynamic from "next/dynamic";
-import { Gavel, RefreshCw } from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -30,16 +30,18 @@ export function NavHeader({
 }: NavHeaderProps) {
   return (
     <header className="fixed top-0 left-0 right-0 h-16 border-b border-zinc-900/40 bg-zinc-950/80 backdrop-blur-md z-50 flex items-center justify-between px-6 max-w-7xl mx-auto w-full">
-      {/* Brand Logo & Text */}
       <div className="flex items-center gap-3 font-extrabold text-sm tracking-[0.2em] text-zinc-100 select-none">
         <Link
           href="/"
           aria-label="Enderforge Home"
-          className="bg-gradient-to-tr from-orange-500 to-amber-500 p-1.5 rounded-sm shadow-lg shadow-orange-500/10 inline-flex"
+          className="flex items-center gap-2.5"
         >
-          <Gavel className="size-4 text-zinc-950 fill-zinc-950" />
+          <img src="/ELDERFORGE.png" alt="Enderforge Logo" className="size-8 object-contain" />
+          <span className="uppercase tracking-[0.25em] font-black text-xs sm:text-sm">
+            <span className="text-zinc-400">ENDER</span>
+            <span className="text-orange-500">FORGE</span>
+          </span>
         </Link>
-        <span className="uppercase">ENDERFORGE</span>
         {mode === "dashboard" && (
           <span className="text-zinc-500 text-xs tracking-wider font-mono font-normal border-l border-zinc-800 pl-3 hidden sm:inline">
             OPERATIONS_SHELL_V3
