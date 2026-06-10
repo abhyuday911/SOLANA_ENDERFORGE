@@ -69,6 +69,8 @@ export default function DashboardPage() {
   const toggleCluster = () => {
     const nextCluster = cluster === "mainnet-beta" ? "devnet" : "mainnet-beta";
     setCluster(nextCluster);
+    // Clear stale portfolio data to trigger the loading skeleton during network transition
+    setData(null);
     performAnalysis(nextCluster);
   };
 
@@ -132,6 +134,8 @@ export default function DashboardPage() {
                   onClick={() => {
                     if (cluster !== "mainnet-beta") {
                       setCluster("mainnet-beta");
+                      // Clear stale portfolio data to trigger the loading skeleton during network transition
+                      setData(null);
                       performAnalysis("mainnet-beta");
                     }
                   }}
@@ -148,6 +152,8 @@ export default function DashboardPage() {
                   onClick={() => {
                     if (cluster !== "devnet") {
                       setCluster("devnet");
+                      // Clear stale portfolio data to trigger the loading skeleton during network transition
+                      setData(null);
                       performAnalysis("devnet");
                     }
                   }}
