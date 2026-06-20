@@ -37,7 +37,7 @@ export function AINarrativeCard({ summary, isLoading }: AINarrativeCardProps) {
       </div>
 
       {/* Monospace Code Terminal Content */}
-      <div className="bg-graphite-sunk shadow-milled-sunk border border-zinc-950/80 rounded-xl p-4 md:p-5 overflow-y-auto max-h-[320px] font-mono text-[11px] leading-relaxed text-zinc-300">
+      <div className="bg-graphite-sunk shadow-milled-sunk border border-zinc-950/80 rounded-xl p-4 md:p-5 overflow-y-auto scrollbar-hide max-h-[320px] font-mono text-[11px] leading-relaxed text-zinc-300">
         {isLoading ? (
           <div className="space-y-4">
             <div className="flex items-center gap-2 text-zinc-500 text-[9px] uppercase tracking-wider">
