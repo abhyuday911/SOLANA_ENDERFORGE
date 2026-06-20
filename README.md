@@ -208,7 +208,7 @@ bun start
 
 ---
 
-<div align="center">
+<div align="center" >
   <p><i>Formed, Calibrated, and Audited under the Enderforge Sovereign Standard.</i></p>
   <img src="https://img.shields.io/badge/Designed_for-Solana_IN_Fellowship_Hackathon-orange?style=flat&logo=solana" alt="Solana Global x Banner" />
 </div>

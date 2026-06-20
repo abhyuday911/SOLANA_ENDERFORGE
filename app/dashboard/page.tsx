@@ -11,7 +11,7 @@ import { YieldMatrix } from "@/components/dashboard/YieldMatrix";
 import { TokenHoldingsTable } from "@/components/dashboard/TokenHoldingsTable";
 import { AINarrativeCard } from "@/components/dashboard/AINarrativeCard";
 import { Button } from "@/components/ui/button";
-import { Gavel, RefreshCw, ShieldAlert, Sparkles, Wallet } from "lucide-react";
+import { RefreshCw, ShieldAlert, Sparkles, Wallet } from "lucide-react";
 import { cn } from "@/lib/utils";
 import Link from 'next/link';
 
@@ -69,6 +69,8 @@ export default function DashboardPage() {
   const toggleCluster = () => {
     const nextCluster = cluster === "mainnet-beta" ? "devnet" : "mainnet-beta";
     setCluster(nextCluster);
+    // Clear stale portfolio data to trigger the loading skeleton during network transition
+    setData(null);
     performAnalysis(nextCluster);
   };
 
@@ -89,7 +91,7 @@ export default function DashboardPage() {
       <div className="min-h-screen bg-graphite-canvas text-zinc-100 flex flex-col justify-center items-center px-6 py-24 select-none">
         <div className="relative">
           <div className="relative bg-graphite-plate border-milled-bevel shadow-milled-elevated rounded-3xl p-5">
-            <Gavel className="size-10 text-orange-500" />
+            <img src="/ELDERFORGE.png" alt="Enderforge Logo" className="size-16 object-contain" />
           </div>
         </div>
 
@@ -113,20 +115,18 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-graphite-canvas text-zinc-100 selection:bg-orange-500/20 font-sans select-none">
       <div className="max-w-7xl mx-auto px-6 py-10 space-y-8 w-full">
-        {/* Header HUD */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-zinc-950 pb-8">
           <div className="space-y-1.5">
             <h2 className="text-lg font-extrabold text-zinc-100 tracking-wider flex items-center gap-3">
               <Link
                 href="/"
                 aria-label="Go to home"
-                className="flex items-center gap-3"
+                className="flex items-center gap-2.5"
               >
-                <div className="bg-gradient-to-tr from-orange-500 to-amber-500 p-1.5 rounded-lg shadow-sm inline-flex">
-                  <Gavel className="size-4 text-zinc-950 fill-zinc-950" />
-                </div>
+                <img src="/ELDERFORGE.png" alt="Enderforge Logo" className="size-8 object-contain" />
                 <span className="uppercase text-sm tracking-[0.25em] font-black">
-                  ENDERFORGE
+                  <span className="text-zinc-400">ENDER</span>
+                  <span className="text-orange-500">FORGE</span>
                 </span>
               </Link>
               <div className="bg-graphite-sunk border border-zinc-950 shadow-milled-sunk p-0.5 rounded-xl flex items-center gap-0.5 ml-3">
@@ -134,6 +134,8 @@ export default function DashboardPage() {
                   onClick={() => {
                     if (cluster !== "mainnet-beta") {
                       setCluster("mainnet-beta");
+                      // Clear stale portfolio data to trigger the loading skeleton during network transition
+                      setData(null);
                       performAnalysis("mainnet-beta");
                     }
                   }}
@@ -150,6 +152,8 @@ export default function DashboardPage() {
                   onClick={() => {
                     if (cluster !== "devnet") {
                       setCluster("devnet");
+                      // Clear stale portfolio data to trigger the loading skeleton during network transition
+                      setData(null);
                       performAnalysis("devnet");
                     }
                   }}

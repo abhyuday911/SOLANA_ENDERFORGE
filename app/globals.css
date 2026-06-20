@@ -61,7 +61,7 @@
   --color-emerald-700: oklch(0.50 0.16 154);
   --color-emerald-800: oklch(0.40 0.14 154);
   --color-emerald-900: oklch(0.28 0.10 154);
-  --color-emerald-950: oklch(0.12 0.015 154); /* Deep velvet dark green */
+  --color-emerald-950: oklch(0.18 0.05 154); /* Deep velvet dark green */
 
   /* Gold accents for premium states */
   --color-gold-400: oklch(0.86 0.10 85);
@@ -188,4 +188,13 @@
   html {
     @apply font-sans;
   }
+}
+
+.scrollbar-hide {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none !important;
 }
