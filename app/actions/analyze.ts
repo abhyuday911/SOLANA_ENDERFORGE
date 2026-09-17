@@ -8,7 +8,7 @@
  * 3. Fetch real-time prices via Jupiter V3
  * 4. Run risk engines
  * 5. Match yield opportunities
- * 6. AI synthesis via Groq (llama-3.3-70b-versatile)
+ * 6. AI synthesis via Groq (model: lib/ai-model.ts)
  */
 
 import { z } from "zod";
@@ -16,6 +16,7 @@ import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import Groq from "groq-sdk";
 import { env } from "@/lib/env";
+import { GROQ_MODEL, buildAnalysisPrompt } from "@/lib/ai-model";
 import {
   type TokenHolding,
   generateRiskReport,
@@ -262,50 +263,7 @@ To get a meaningful analysis, please deposit some SOL or SPL tokens into your wa
     };
   }
 
-  const top20 = [...holdings]
-    .sort((a, b) => b.valueUsd - a.valueUsd)
-    .slice(0, 20);
-
-  const portfolioSummary = top20
-    .map(
-      (h, i) =>
-        `${i + 1}. ${h.symbol}: $${h.valueUsd.toFixed(2)} (${h.allocationPct}%)`
-    )
-    .join("\n");
-
-  const riskSummary = [
-    `HHI Score: ${riskReport.hhiScore}/100`,
-    riskReport.concentrationRisks.length > 0
-      ? `Concentration Risks: ${riskReport.concentrationRisks.map((c) => `${c.symbol} at ${c.allocationPct.toFixed(1)}%`).join(", ")}`
-      : "No concentration risks detected.",
-  ].join("\n");
-
-  const yieldSummary =
-    activeYieldOpportunities.length > 0
-      ? activeYieldOpportunities
-        .map(
-          (ym) =>
-            `${ym.symbol}: Top pool = ${ym.opportunities[0]?.protocolName} @ ${ym.opportunities[0]?.apy.toFixed(2)}% APY`
-        )
-        .join("\n")
-      : "No yield opportunities matched.";
-
-  const prompt = `You are a DeFi strategist for Solana. Analyze this portfolio and provide a concise strategic assessment in 3-5 paragraphs of markdown.
-  
-## Portfolio
-${portfolioSummary}
- 
-## Risk Analysis
-${riskSummary}
- 
-## Yield Opportunities
-${yieldSummary}
- 
-IMPORTANT: 
-- Highlight key yield opportunities and specific strategies by wrapping them in double asterisks **like this**. 
-- DO NOT use HTML tags like <font> or <span>.
-- Use a professional yet encouraging tone.
-- Ensure the assessment is data-driven.`;
+  const prompt = buildAnalysisPrompt(holdings, riskReport, activeYieldOpportunities);
 
   try {
     const completion = await groq.chat.completions.create({
@@ -316,7 +274,13 @@ IMPORTANT:
         },
         { role: "user", content: prompt },
       ],
-      model: "llama-3.3-70b-versatile",
+      // Root cause (2026-09-17): Groq retired llama-3.3-70b-versatile. The API
+      // returned 404 model_not_found, so every summary hit the generic AI_ERROR
+      // fallback in production. GROQ_MODEL is asserted live by `bun run test`.
+      model: GROQ_MODEL,
+      // gpt-oss is a reasoning model; "low" keeps hidden reasoning tokens from
+      // consuming the max_tokens budget meant for the visible summary.
+      reasoning_effort: "low",
       temperature: 0.4,
       max_tokens: 1024,
     });
@@ -383,18 +347,23 @@ export async function analyzePortfolio(
   }
 
   const { ratelimit, groq } = getClients();
-  const { success: rateLimitOk } = await ratelimit.limit(walletAddress);
-  if (!rateLimitOk) {
-    return {
-      success: false,
-      error: {
-        error: "Rate limit exceeded. Please wait 60 seconds.",
-        code: "RATE_LIMITED",
-      },
-    };
-  }
 
   try {
+    // Root cause (2026-09-17): this call lived outside the try/catch, so an
+    // unreachable Redis host (ENOTFOUND) rejected the server action and crashed
+    // the dashboard with Next.js's default error screen. Inside the try, a Redis
+    // outage degrades to a typed INTERNAL envelope the UI can render.
+    const { success: rateLimitOk } = await ratelimit.limit(walletAddress);
+    if (!rateLimitOk) {
+      return {
+        success: false,
+        error: {
+          error: "Rate limit exceeded. Please wait 60 seconds.",
+          code: "RATE_LIMITED",
+        },
+      };
+    }
+
     const rpcUrl =
       cluster === "devnet" ? env.HELIUS_DEVNET_RPC_URL : env.HELIUS_RPC_URL;
     let holdings = await fetchHeliusBalances(walletAddress, rpcUrl);
