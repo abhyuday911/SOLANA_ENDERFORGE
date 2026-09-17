@@ -51,7 +51,7 @@ We have fully migrated away from the legacy `@solana/web3.js` library, rebuildin
 - **Composable Pipelines:** State transformations use standard JavaScript pipes, enabling clean, secure, functional processing of raw chain events.
 
 ### 2. LPU-Accelerated Strategy Synthesis
-We leverage **Groq’s Language Processing Unit (LPU)** hosting `llama-3.3-70b-versatile` to generate custom-milled portfolio intelligence and qualitative yield strategies in **<500ms**. 
+We leverage **Groq’s Language Processing Unit (LPU)** hosting `openai/gpt-oss-120b` to generate custom-milled portfolio intelligence and qualitative yield strategies in **<500ms**. 
 - **Real-Time feel:** AI synthesis acts like a dynamic, instantaneous interface component rather than a slow, loading-spinner-ridden legacy API request.
 - **Structured Data Prompting:** Real-time data streams feed directly into the LPU context window, generating mathematically grounded risk assessment reports with zero hallucination.
 

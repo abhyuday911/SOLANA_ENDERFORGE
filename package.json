@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
+    "test": "bun scripts/analyze-resilience.test.ts && bun scripts/ai-prompt.test.ts && bun scripts/groq-model.test.ts",
+    "test:e2e": "bun scripts/e2e-prod.ts",
     "validate:architecture": "node scripts/validate-architecture-sync.js"
   },
   "dependencies": {
