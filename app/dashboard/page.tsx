@@ -37,7 +37,10 @@ export default function DashboardPage() {
   useEffect(() => {
     if (data?.aiError) {
       setToast({
-        message: "AI credits limit reached. Standard risk metrics are fully operational.",
+        message:
+          data.aiError.code === "AI_RATE_LIMIT"
+            ? "AI credits limit reached. Standard risk metrics are fully operational."
+            : "AI synthesis unavailable. Standard risk metrics are fully operational.",
         type: "warning",
       });
       const timer = setTimeout(() => setToast(null), 8000);
