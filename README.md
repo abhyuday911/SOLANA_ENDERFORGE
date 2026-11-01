@@ -6,7 +6,7 @@
 
 [![Status: Live](https://img.shields.io/badge/Status-Live-emerald?style=for-the-badge&logo=solana&logoColor=white)](https://enderforge.abhyuday.dev/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-orange?style=for-the-badge)](LICENSE)
-[![Engine: @solana/kit](https://img.shields.io/badge/Engine-%40solana%2Fkit_v6.9.0-blueviolet?style=for-the-badge)](https://github.com/solana-labs/solana-web3.js)
+[![Engine: @solana/kit](https://img.shields.io/badge/Engine-%40solana%2Fkit_v6.9.0-blueviolet?style=for-the-badge)](https://github.com/anza-xyz/kit)
 [![Model: Llama3--70b](https://img.shields.io/badge/Model-Llama3--3--70b--Versatile-ff69b4?style=for-the-badge&logo=groq)](https://groq.com)
 
 ---
